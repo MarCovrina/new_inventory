@@ -1,0 +1,402 @@
+/* Mobile First Responsive Styles */
+
+/* Reset and Base */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f5f5f5;
+}
+
+/* Main Layout */
+.main-layout {
+  min-height: 100vh;
+}
+
+.main-sider {
+  background: #fff;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.logo-container {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.logo-text {
+  margin: 0 !important;
+  color: #1890ff;
+}
+
+.main-header {
+  background: #fff;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-title {
+  margin: 0 !important;
+}
+
+.menu-toggle {
+  font-size: 18px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.user-button {
+  display: flex;
+  align-items: center;
+}
+
+.user-name {
+  margin-left: 8px;
+}
+
+.main-content {
+  padding: 16px;
+  background: #f5f5f5;
+  min-height: calc(100vh - 64px);
+}
+
+.sider-actions {
+  padding: 16px;
+  position: absolute;
+  bottom: 60px;
+  left: 0;
+  right: 0;
+}
+
+.mobile-logo-container {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.mobile-sider-actions {
+  padding: 16px;
+}
+
+/* User Select */
+.user-select-layout {
+  min-height: 100vh;
+}
+
+.user-select-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.user-select-card {
+  background: #fff;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 100%;
+}
+
+/* Sheet Registry */
+.sheet-registry .stats-row {
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  text-align: center;
+}
+
+.filters-card {
+  margin-bottom: 16px;
+}
+
+.table-card {
+  margin-bottom: 16px;
+}
+
+.tech-locations-progress {
+  min-width: 80px;
+}
+
+.progress-bar-container {
+  height: 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-bar-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 500;
+  color: #666;
+}
+
+/* Create Sheet */
+.create-sheet .create-card {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.tech-locations-select {
+  background: #fafafa;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+/* Sheet Detail */
+.sheet-detail .sheet-info-card {
+  margin-bottom: 16px;
+}
+
+.sheet-detail .actions-card {
+  margin-bottom: 16px;
+}
+
+/* Technical Location Card */
+.tech-location-card {
+  transition: all 0.3s ease;
+}
+
+.tech-location-card.inspected {
+  border-left: 4px solid #52c41a;
+}
+
+.characteristic-item {
+  padding: 8px;
+  background: #fafafa;
+  border-radius: 6px;
+}
+
+/* Photo Upload */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.photo-card {
+  overflow: hidden;
+}
+
+.photo-thumbnail {
+  position: relative;
+  height: 120px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.photo-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.photo-thumbnail:hover img {
+  transform: scale(1.1);
+}
+
+.photo-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: #fff;
+  font-size: 20px;
+}
+
+.photo-thumbnail:hover .photo-overlay {
+  opacity: 1;
+}
+
+.upload-card {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 2px dashed #d9d9d9;
+  transition: border-color 0.3s ease;
+}
+
+.upload-card:hover {
+  border-color: #1890ff;
+}
+
+.upload-placeholder {
+  text-align: center;
+}
+
+/* Material Manager */
+.material-manager {
+  margin-top: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 12px;
+  }
+
+  .main-header {
+    padding: 0 12px;
+  }
+
+  .header-title {
+    font-size: 16px !important;
+  }
+
+  .photo-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .photo-thumbnail {
+    height: 100px;
+  }
+
+  .tech-location-card .ant-card-head {
+    padding: 12px 16px;
+  }
+
+  .tech-location-card .ant-card-body {
+    padding: 12px;
+  }
+
+  .ant-collapse > .ant-collapse-item > .ant-collapse-header {
+    padding: 12px 16px !important;
+  }
+
+  .ant-collapse-content-box {
+    padding: 12px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .photo-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .user-select-card {
+    padding: 24px 16px;
+  }
+
+  .sheet-detail .ant-descriptions-bordered .ant-descriptions-item-label,
+  .sheet-detail .ant-descriptions-bordered .ant-descriptions-item-content {
+    padding: 8px 12px;
+  }
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sheet-registry .ant-card,
+.create-sheet .create-card,
+.sheet-detail .sheet-info-card,
+.sheet-detail .actions-card,
+.tech-location-card {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Empty states */
+.ant-empty-description {
+  color: #999;
+}
+
+/* Button responsive */
+@media (max-width: 480px) {
+  .ant-btn {
+    padding: 4px 12px;
+  }
+  
+  .ant-btn-lg {
+    padding: 6px 16px;
+  }
+}
+
+/* Table responsive */
+.ant-table-wrapper {
+  overflow-x: auto;
+}
+
+/* Modal responsive */
+.ant-modal {
+  max-width: calc(100vw - 32px);
+}
+
+.ant-modal-content {
+  margin: 16px;
+}
+
+/* Steps */
+.ant-steps-item-title {
+  font-size: 12px !important;
+}
