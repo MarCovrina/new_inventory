@@ -379,22 +379,35 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
           <Divider style={{ margin: '16px 0' }}>📷 Фотографии ({photos.length}/8)</Divider>
 
           <Form.Item style={{ marginBottom: 8 }}>
-            <Upload
-              listType="picture-card"
-              fileList={photos}
-              onChange={handlePhotoUpload}
-              onRemove={handleRemovePhoto}
-              beforeUpload={() => false}
-              maxCount={8}
-              accept="image/*"
-            >
-              {photos.length < 8 && (
-                <div>
-                  <UploadOutlined style={{ fontSize: 24 }} />
-                  <div style={{ marginTop: 4, fontSize: 12 }}>Добавить</div>
-                </div>
-              )}
-            </Upload>
+            <div style={{ 
+              minHeight: photos.length >= 5 ? 200 : 120, 
+              transition: 'min-height 0.3s ease'
+            }}>
+              <Upload
+                listType="picture-card"
+                fileList={photos}
+                onChange={handlePhotoUpload}
+                onRemove={handleRemovePhoto}
+                beforeUpload={(file) => {
+                  const isImage = file.type.startsWith('image/');
+                  if (!isImage) {
+                    message.error('Можно загружать только изображения!');
+                    return Upload.LIST_IGNORE;
+                  }
+                  return false;
+                }}
+                maxCount={8}
+                multiple
+                accept="image/*"
+              >
+                {photos.length < 8 && (
+                  <div>
+                    <UploadOutlined style={{ fontSize: 24 }} />
+                    <div style={{ marginTop: 4, fontSize: 12 }}>Добавить</div>
+                  </div>
+                )}
+              </Upload>
+            </div>
           </Form.Item>
 
           <Divider style={{ margin: '16px 0' }}>💬 Комментарий</Divider>
