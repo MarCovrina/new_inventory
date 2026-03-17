@@ -14,25 +14,120 @@ import {
   Select, 
   Checkbox,
   Divider,
+  Upload,
   message 
 } from 'antd';
 import { 
-  EditOutlined, 
   PlusOutlined, 
   DeleteOutlined, 
   CheckCircleOutlined, 
   ClockCircleOutlined,
-  ArrowLeftOutlined 
+  ArrowLeftOutlined,
+  UploadOutlined,
+  EnvironmentOutlined 
 } from '@ant-design/icons';
 import { getTechnicalPlacesByObjectId, technicalPlaceCharacteristics } from '../data/mockData';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
+// Coordinate Picker Modal Component - Mobile Optimized
+const CoordinatePickerModal = ({ open, value, onSave, onCancel }) => {
+  const [lat, setLat] = useState(value?.lat || 53.3548);
+  const [lon, setLon] = useState(value?.lon || 83.7698);
+
+  const handleMapClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const newLat = 53.4 + (1 - y / rect.height) * 0.2;
+    const newLon = 83.5 + (x / rect.width) * 0.8;
+    setLat(parseFloat(newLat.toFixed(6)));
+    setLon(parseFloat(newLon.toFixed(6)));
+  };
+
+  return (
+    <Modal
+      title="📍 Выбор координат"
+      open={open}
+      onCancel={onCancel}
+      onOk={() => onSave({ lat, lon })}
+      okText="Применить"
+      width="95%"
+      style={{ maxWidth: 500 }}
+      styles={{ body: { padding: 16 } }}
+    >
+      <div 
+        style={{ 
+          width: '100%', 
+          height: 250, 
+          background: '#e6f7ff',
+          border: '2px solid #91d5ff',
+          borderRadius: 12,
+          position: 'relative',
+          overflow: 'hidden',
+          cursor: 'crosshair',
+          touchAction: 'none'
+        }}
+        onClick={handleMapClick}
+      >
+        <div style={{
+          width: '100%',
+          height: '100%',
+          background: `linear-gradient(to right, #f0f0f0 1px, transparent 1px),
+                       linear-gradient(to bottom, #f0f0f0 1px, transparent 1px),
+                       linear-gradient(to right, #e0e0e0 40px, transparent 40px),
+                       linear-gradient(to bottom, #e0e0e0 40px, transparent 40px)`,
+          backgroundSize: '20px 20px, 20px 20px, 80px 80px, 80px 80px'
+        }}>
+          <div style={{ 
+            position: 'absolute', 
+            top: '50%', 
+            left: '50%', 
+            transform: 'translate(-50%, -50%)',
+            fontSize: 48,
+            color: '#1890ff'
+          }}>
+            <EnvironmentOutlined spin />
+          </div>
+        </div>
+      </div>
+      
+      <div style={{ marginTop: 16 }}>
+        <Row gutter={12}>
+          <Col span={12}>
+            <Text type="secondary" style={{ fontSize: 12, marginBottom: 4, display: 'block' }}>Широта</Text>
+            <InputNumber
+              value={lat}
+              onChange={v => setLat(v || 0)}
+              precision={6}
+              style={{ width: '100%' }}
+              size="large"
+            />
+          </Col>
+          <Col span={12}>
+            <Text type="secondary" style={{ fontSize: 12, marginBottom: 4, display: 'block' }}>Долгота</Text>
+            <InputNumber
+              value={lon}
+              onChange={v => setLon(v || 0)}
+              precision={6}
+              style={{ width: '100%' }}
+              size="large"
+            />
+          </Col>
+        </Row>
+      </div>
+      <div style={{ marginTop: 12, textAlign: 'center' }}>
+        <Text type="secondary" style={{ fontSize: 13 }}>👆 Кликните на карту для выбора</Text>
+      </div>
+    </Modal>
+  );
+};
+
 const TechnicalPlaceCard = ({ place, onClick, isSelected }) => {
   const statusIcon = place.isInspected 
-    ? <CheckCircleOutlined style={{ color: '#52c41a' }} /> 
-    : <ClockCircleOutlined style={{ color: '#faad14' }} />;
+    ? <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 18 }} /> 
+    : <ClockCircleOutlined style={{ color: '#faad14', fontSize: 18 }} />;
 
   return (
     <Card
@@ -40,19 +135,20 @@ const TechnicalPlaceCard = ({ place, onClick, isSelected }) => {
       onClick={() => onClick(place)}
       style={{ 
         borderColor: isSelected ? '#1890ff' : '#d9d9d9',
-        backgroundColor: place.isInspected ? '#f6ffed' : '#fffbf0'
+        backgroundColor: place.isInspected ? '#f6ffed' : '#fffbf0',
+        borderRadius: 12,
+        marginBottom: 12
       }}
       styles={{ body: { padding: 16 } }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <Text strong style={{ fontSize: 16 }}>{place.name}</Text>
-          <br />
-          <Tag color="blue">{place.type}</Tag>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ flex: 1 }}>
+          <Text strong style={{ fontSize: 16, display: 'block' }}>{place.name}</Text>
+          <Tag color="blue" style={{ marginTop: 4 }}>{place.type}</Tag>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 100, justifyContent: 'flex-end' }}>
           {statusIcon}
-          <Text type={place.isInspected ? 'success' : 'warning'}>
+          <Text style={{ fontSize: 13 }} type={place.isInspected ? 'success' : 'warning'}>
             {place.isInspected ? 'Осмотрено' : 'Не осмотрено'}
           </Text>
         </div>
@@ -60,7 +156,7 @@ const TechnicalPlaceCard = ({ place, onClick, isSelected }) => {
       {place.comment && (
         <div style={{ marginTop: 8 }}>
           <Text type="secondary" ellipsis style={{ fontSize: 12 }}>
-            Комментарий: {place.comment}
+            💬 {place.comment}
           </Text>
         </div>
       )}
@@ -71,6 +167,7 @@ const TechnicalPlaceCard = ({ place, onClick, isSelected }) => {
 const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
   const [form] = Form.useForm();
   const [characteristics, setCharacteristics] = useState(place.characteristics || {});
+  const [photos, setPhotos] = useState(place.photos || []);
   
   const charDefinitions = technicalPlaceCharacteristics[place.type] || [];
 
@@ -79,6 +176,7 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
       ...place.characteristics,
       comment: place.comment || ''
     });
+    setPhotos(place.photos || []);
   }, [place, form]);
 
   const handleValuesChange = (changedValues, allValues) => {
@@ -91,44 +189,112 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
       ...place,
       characteristics: values,
       comment: values.comment,
+      photos: photos,
       isInspected: true
     });
     message.success('Изменения сохранены');
   };
 
-  const renderCharacteristicField = (char, index) => {
+  const handlePhotoUpload = ({ fileList: newFileList }) => {
+    if (newFileList.length > 8) {
+      message.warning('Максимум 8 фото');
+      return;
+    }
+    setPhotos(newFileList);
+  };
+
+  const handleRemovePhoto = (file) => {
+    setPhotos(prev => prev.filter(p => p.uid !== file.uid));
+  };
+
+  // Mobile-optimized Coordinate Picker
+  const CoordinatePicker = ({ value, onChange }) => {
+    const [open, setOpen] = useState(false);
+    const [coords, setCoords] = useState(value || null);
+
+    const handleSave = (newCoords) => {
+      setCoords(newCoords);
+      onChange(newCoords);
+      setOpen(false);
+    };
+
+    return (
+      <>
+        <Button 
+          type={coords ? 'default' : 'primary'}
+          icon={<EnvironmentOutlined />} 
+          onClick={() => setOpen(true)}
+          size="large"
+          block
+          style={{ height: 48, marginBottom: 8 }}
+        >
+          {coords ? `📍 ${coords.lat.toFixed(5)}, ${coords.lon.toFixed(5)}` : '📍 Выбрать на карте'}
+        </Button>
+        {coords && (
+          <Button 
+            type="text" 
+            danger
+            icon={<DeleteOutlined />} 
+            onClick={() => {
+              setCoords(null);
+              onChange(null);
+            }}
+            size="small"
+          >
+            Очистить
+          </Button>
+        )}
+        <CoordinatePickerModal
+          open={open}
+          value={coords}
+          onSave={handleSave}
+          onCancel={() => setOpen(false)}
+        />
+      </>
+    );
+  };
+
+  const renderCharacteristicField = (char) => {
     const commonProps = {
       key: char.key,
       label: char.label,
       name: char.key,
-      rules: char.type === 'number' ? [{ type: 'number', message: 'Введите число' }] : []
+      rules: char.type === 'number' ? [{ type: 'number', message: 'Введите число' }] : [],
+      style: { marginBottom: 16 }
     };
 
     switch (char.type) {
       case 'string':
         return (
-          <Col span={12} key={char.key}>
+          <Col xs={24} sm={12} key={char.key}>
             <Form.Item {...commonProps}>
-              <Input placeholder={`Введите ${char.label.toLowerCase()}`} />
+              <Input 
+                placeholder={char.label} 
+                size="large"
+              />
             </Form.Item>
           </Col>
         );
       case 'number':
         return (
-          <Col span={12} key={char.key}>
+          <Col xs={24} sm={12} key={char.key}>
             <Form.Item {...commonProps}>
               <InputNumber 
                 style={{ width: '100%' }} 
-                placeholder={`Введите ${char.label.toLowerCase()}`}
+                placeholder={char.label}
+                size="large"
               />
             </Form.Item>
           </Col>
         );
       case 'select':
         return (
-          <Col span={12} key={char.key}>
+          <Col xs={24} sm={12} key={char.key}>
             <Form.Item {...commonProps} name={char.key}>
-              <Select placeholder="Выберите значение">
+              <Select 
+                placeholder="Выберите"
+                size="large"
+              >
                 {char.options.map(opt => (
                   <Select.Option key={opt} value={opt}>{opt}</Select.Option>
                 ))}
@@ -138,13 +304,32 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
         );
       case 'boolean':
         return (
-          <Col span={12} key={char.key}>
+          <Col xs={24} key={char.key}>
             <Form.Item 
               label={char.label} 
               name={char.key} 
               valuePropName="checked"
+              style={{ marginBottom: 16 }}
             >
-              <Checkbox />
+              <Checkbox style={{ transform: 'scale(1.3)', marginLeft: 8 }} />
+            </Form.Item>
+          </Col>
+        );
+      case 'coordinates':
+        return (
+          <Col xs={24} key={char.key}>
+            <Form.Item 
+              label={char.label} 
+              name={char.key}
+              style={{ marginBottom: 16 }}
+            >
+              <CoordinatePicker 
+                value={characteristics[char.key]} 
+                onChange={(coords) => {
+                  form.setFieldValue(char.key, coords);
+                  setCharacteristics(prev => ({ ...prev, [char.key]: coords }));
+                }}
+              />
             </Form.Item>
           </Col>
         );
@@ -154,49 +339,102 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
   };
 
   return (
-    <div>
-      <Button 
-        icon={<ArrowLeftOutlined />} 
-        onClick={onBack}
-        style={{ marginBottom: 16 }}
-      >
-        К списку технических мест
-      </Button>
+    <div style={{ padding: '0 4px' }}>
+      {/* Sticky Header with Back Button */}
+      <div style={{ 
+        position: 'sticky', 
+        top: 0, 
+        background: '#fff', 
+        zIndex: 10, 
+        padding: '12px 0',
+        borderBottom: '1px solid #f0f0f0',
+        marginBottom: 16,
+        marginLeft: -4,
+        marginRight: -4
+      }}>
+        <Button 
+          icon={<ArrowLeftOutlined />} 
+          onClick={onBack}
+          size="large"
+        >
+          Назад
+        </Button>
+      </div>
 
-      <Card>
-        <Title level={4}>{place.name}</Title>
+      <Card style={{ borderRadius: 12 }}>
+        <Title level={4} style={{ marginBottom: 8 }}>{place.name}</Title>
         <Tag color="blue" style={{ marginBottom: 16 }}>{place.type}</Tag>
 
-        <Divider>Характеристики технического места</Divider>
+        <Divider style={{ margin: '16px 0' }}>Характеристики</Divider>
 
         <Form
           form={form}
-          layout="horizontal"
+          layout="vertical"
           onValuesChange={handleValuesChange}
-          labelCol={{ span: 8 }}
-          wrapperCol={{ span: 16 }}
         >
-          <Row gutter={16}>
-            {charDefinitions.map((char, index) => renderCharacteristicField(char, index))}
+          <Row gutter={[12, 0]}>
+            {charDefinitions.map(char => renderCharacteristicField(char))}
           </Row>
 
-          <Divider>Комментарий</Divider>
+          <Divider style={{ margin: '16px 0' }}>📷 Фотографии ({photos.length}/8)</Divider>
 
-          <Form.Item label="Комментарий" name="comment">
+          <Form.Item style={{ marginBottom: 8 }}>
+            <Upload
+              listType="picture-card"
+              fileList={photos}
+              onChange={handlePhotoUpload}
+              onRemove={handleRemovePhoto}
+              beforeUpload={() => false}
+              maxCount={8}
+              accept="image/*"
+            >
+              {photos.length < 8 && (
+                <div>
+                  <UploadOutlined style={{ fontSize: 24 }} />
+                  <div style={{ marginTop: 4, fontSize: 12 }}>Добавить</div>
+                </div>
+              )}
+            </Upload>
+          </Form.Item>
+
+          <Divider style={{ margin: '16px 0' }}>💬 Комментарий</Divider>
+
+          <Form.Item label="" name="comment" style={{ marginBottom: 16 }}>
             <TextArea 
               rows={3} 
-              placeholder="Введите комментарий к техническому месту"
+              placeholder="Введите комментарий..."
+              size="large"
             />
           </Form.Item>
         </Form>
 
-        <div style={{ marginTop: 24, textAlign: 'right' }}>
-          <Space>
-            <Button onClick={onBack}>Отмена</Button>
-            <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleSave}>
-              Сохранить изменения
-            </Button>
-          </Space>
+        {/* Sticky Footer with Action Buttons */}
+        <div style={{ 
+          position: 'sticky', 
+          bottom: 0, 
+          background: '#fff',
+          padding: '16px 0',
+          marginLeft: -16,
+          marginRight: -16,
+          marginBottom: -16,
+          paddingLeft: 16,
+          paddingRight: 16,
+          borderTop: '1px solid #f0f0f0',
+          display: 'flex',
+          gap: 12
+        }}>
+          <Button onClick={onBack} size="large" style={{ flex: 1 }}>
+            Отмена
+          </Button>
+          <Button 
+            type="primary" 
+            icon={<CheckCircleOutlined />} 
+            onClick={handleSave}
+            size="large"
+            style={{ flex: 2 }}
+          >
+            Сохранить
+          </Button>
         </div>
       </Card>
     </div>
@@ -232,7 +470,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
     const newPlace = {
       id: Date.now(),
       objectId: sheet.object.id,
-      type: technicalPlaceCharacteristics[Object.keys(technicalPlaceCharacteristics)[0]] ? Object.keys(technicalPlaceCharacteristics)[0] : 'Опора',
+      type: Object.keys(technicalPlaceCharacteristics)[0] || 'Опора',
       name: `Новое тех. место`,
       isInspected: false,
       characteristics: {},
@@ -261,73 +499,73 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
     }
 
     return (
-      <div>
-        <div style={{ marginBottom: 16 }}>
-          <Space>
-            <Text strong>Объект:</Text>
-            <Text>{sheet.object.name}</Text>
-            <Tag>{sheet.object.type}</Tag>
+      <div style={{ padding: '0 4px' }}>
+        {/* Sheet Info */}
+        <Card style={{ borderRadius: 12, marginBottom: 16 }}>
+          <Space direction="vertical" size={8} style={{ width: '100%' }}>
+            <div>
+              <Text type="secondary">Объект</Text>
+              <br />
+              <Text strong style={{ fontSize: 15 }}>{sheet.object.name}</Text>
+              <Tag style={{ marginLeft: 8 }}>{sheet.object.type}</Tag>
+            </div>
+            <div>
+              <Text type="secondary">Исполнитель</Text>
+              <br />
+              <Text>{sheet.executor?.name}</Text>
+            </div>
+            <div>
+              <Text type="secondary">Статус</Text>
+              <br />
+              <Tag color={
+                sheet.status === 'Согласован' ? 'success' :
+                sheet.status === 'В работе' ? 'processing' :
+                sheet.status === 'Сдан на проверку' ? 'warning' :
+                sheet.status === 'Возвращен на доработку' ? 'error' : 'default'
+              }>
+                {sheet.status}
+              </Tag>
+            </div>
           </Space>
-        </div>
-        <div style={{ marginBottom: 16 }}>
-          <Space>
-            <Text strong>Исполнитель:</Text>
-            <Text>{sheet.executor?.name}</Text>
-          </Space>
-        </div>
-        <div style={{ marginBottom: 24 }}>
-          <Space>
-            <Text strong>Статус:</Text>
-            <Tag color={
-              sheet.status === 'Согласован' ? 'success' :
-              sheet.status === 'В работе' ? 'processing' :
-              sheet.status === 'Сдан на проверку' ? 'warning' :
-              sheet.status === 'Возвращен на доработку' ? 'error' : 'default'
-            }>
-              {sheet.status}
-            </Tag>
-          </Space>
-        </div>
+        </Card>
 
-        <Divider>Технические места</Divider>
+        <Divider style={{ margin: '16px 0' }}>📋 Технические места ({technicalPlaces.length})</Divider>
 
-        <Row gutter={[16, 16]} style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+        {/* Technical Places List */}
+        <div style={{ maxHeight: '50vh', overflowY: 'auto' }}>
           {technicalPlaces.map(place => (
-            <Col xs={24} key={place.id}>
-              <TechnicalPlaceCard 
-                place={place} 
-                onClick={handlePlaceClick}
-                isSelected={false}
-              />
-            </Col>
+            <TechnicalPlaceCard 
+              key={place.id}
+              place={place} 
+              onClick={handlePlaceClick}
+              isSelected={false}
+            />
           ))}
-        </Row>
-
-        <div style={{ marginTop: 16, textAlign: 'right' }}>
-          <Button 
-            type="dashed" 
-            icon={<PlusOutlined />} 
-            onClick={handleAddPlace}
-          >
-            Добавить техническое место
-          </Button>
         </div>
+
+        <Button 
+          type="dashed" 
+          icon={<PlusOutlined />} 
+          onClick={handleAddPlace}
+          size="large"
+          block
+          style={{ marginTop: 16, height: 48 }}
+        >
+          Добавить тех. место
+        </Button>
       </div>
     );
   };
 
   return (
     <Modal
-      title={
-        selectedPlace 
-          ? `Редактирование: ${selectedPlace.name}` 
-          : `Лист инвентаризации ${sheet.number}`
-      }
+      title={selectedPlace ? `✏️ ${selectedPlace.name}` : `📄 Лист ${sheet.number}`}
       open={open}
       onCancel={onClose}
-      width={900}
+      width="95%"
+      style={{ maxWidth: 600 }}
       footer={selectedPlace ? null : [
-        <Button key="close" onClick={onClose}>
+        <Button key="close" onClick={onClose} size="large">
           Закрыть
         </Button>
       ]}

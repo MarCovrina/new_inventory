@@ -23,7 +23,7 @@ export const technicalPlaceCharacteristics = {
     { key: 'height', label: 'Высота, м', type: 'number' },
     { key: 'foundationType', label: 'Тип фундамента', type: 'string' },
     { key: 'groundingExists', label: 'Заземление', type: 'boolean' },
-    { key: 'condition', label: 'Состояние', type: 'select', options: ['Отличное', 'Хорошее', 'Удовлетворительное', 'Неудовлетворительное'] }
+    { key: 'coordinates', label: 'Координаты', type: 'coordinates' }
   ],
   [technicalPlaceTypes.SPAN]: [
     { key: 'spanNumber', label: 'Номер пролёта', type: 'string' },
@@ -32,8 +32,7 @@ export const technicalPlaceCharacteristics = {
     { key: 'wireCrossSection', label: 'Сечение провода, мм²', type: 'number' },
     { key: 'cableCount', label: 'Количество проводов', type: 'number' },
     { key: 'sag', label: 'Стрела провеса, м', type: 'number' },
-    { key: 'groundWireExists', label: 'Грозотрос', type: 'boolean' },
-    { key: 'condition', label: 'Состояние', type: 'select', options: ['Отличное', 'Хорошее', 'Удовлетворительное', 'Неудовлетворительное'] }
+    { key: 'groundWireExists', label: 'Грозотрос', type: 'boolean' }
   ],
   [technicalPlaceTypes.TRANSFORMER]: [
     { key: 'transformerNumber', label: 'Номер трансформатора', type: 'string' },
@@ -43,15 +42,13 @@ export const technicalPlaceCharacteristics = {
     { key: 'voltageLV', label: 'Напряжение НН, кВ', type: 'number' },
     { key: 'manufactureYear', label: 'Год выпуска', type: 'number' },
     { key: 'oilLevel', label: 'Уровень масла', type: 'select', options: ['Нормальный', 'Пониженный', 'Критически низкий'] },
-    { key: 'temperature', label: 'Температура, °C', type: 'number' },
-    { key: 'condition', label: 'Состояние', type: 'select', options: ['Отличное', 'Хорошее', 'Удовлетворительное', 'Неудовлетворительное'] }
+    { key: 'temperature', label: 'Температура, °C', type: 'number' }
   ],
   [technicalPlaceTypes.SWITCHGEAR]: [
     { key: 'cellNumber', label: 'Номер ячейки', type: 'string' },
     { key: 'voltage', label: 'Напряжение, кВ', type: 'number' },
     { key: 'ratedCurrent', label: 'Номинальный ток, А', type: 'number' },
-    { key: '断路器Type', label: 'Тип выключателя', type: 'string' },
-    { key: 'condition', label: 'Состояние', type: 'select', options: ['Отличное', 'Хорошее', 'Удовлетворительное', 'Неудовлетворительное'] }
+    { key: '断路器Type', label: 'Тип выключателя', type: 'string' }
   ]
 };
 
