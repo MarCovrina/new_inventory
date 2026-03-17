@@ -177,6 +177,7 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
       comment: place.comment || ''
     });
     setPhotos(place.photos || []);
+    setEquipment(place.equipment || []);
   }, [place, form]);
 
   const handleValuesChange = (changedValues, allValues) => {
@@ -190,6 +191,7 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
       characteristics: values,
       comment: values.comment,
       photos: photos,
+      equipment: equipment,
       isInspected: true
     });
     message.success('Изменения сохранены');
@@ -205,6 +207,37 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
 
   const handleRemovePhoto = (file) => {
     setPhotos(prev => prev.filter(p => p.uid !== file.uid));
+  };
+
+  // Equipment management
+  const [equipment, setEquipment] = useState([]);
+  const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1, unit: 'шт' });
+
+  const handleAddEquipment = () => {
+    if (!newEquipment.name.trim()) {
+      message.warning('Введите название оборудования/материала');
+      return;
+    }
+    const newItem = {
+      id: Date.now(),
+      name: newEquipment.name,
+      quantity: newEquipment.quantity,
+      unit: newEquipment.unit,
+      markedForDeletion: false,
+      isNew: true
+    };
+    setEquipment([...equipment, newItem]);
+    setNewEquipment({ name: '', quantity: 1, unit: 'шт' });
+  };
+
+  const handleToggleDelete = (id) => {
+    setEquipment(prev => prev.map(item => 
+      item.id === id ? { ...item, markedForDeletion: !item.markedForDeletion } : item
+    ));
+  };
+
+  const handleDeleteEquipment = (id) => {
+    handleToggleDelete(id);
   };
 
   // Mobile-optimized Coordinate Picker
@@ -409,6 +442,94 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
               </Upload>
             </div>
           </Form.Item>
+
+          {/* Equipment and Materials Section */}
+          <Divider style={{ margin: '16px 0' }}>🔧 Оборудование и материалы</Divider>
+
+          {/* Equipment List */}
+          <div style={{ marginBottom: 16 }}>
+            {equipment.length === 0 ? (
+              <Text type="secondary">Оборудование и материалы не добавлены</Text>
+            ) : (
+              equipment.map((item) => (
+                <Card 
+                  key={item.id} 
+                  size="small" 
+                  style={{ 
+                    marginBottom: 8, 
+                    opacity: item.markedForDeletion ? 0.5 : 1,
+                    backgroundColor: item.markedForDeletion ? '#fff1f0' : '#f6ffed'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <Text delete={item.markedForDeletion}>{item.name}</Text>
+                      <Text type="secondary" style={{ marginLeft: 8 }}>
+                        ({item.quantity} {item.unit})
+                      </Text>
+                      {item.markedForDeletion && (
+                        <Tag color="red" style={{ marginLeft: 8 }}>На удаление</Tag>
+                      )}
+                    </div>
+                    <Button 
+                      type="text" 
+                      danger={!item.markedForDeletion}
+                      icon={item.markedForDeletion ? <CheckCircleOutlined /> : <DeleteOutlined />}
+                      onClick={() => handleToggleDelete(item.id)}
+                    >
+                      {item.markedForDeletion ? 'Отменить' : 'Удалить'}
+                    </Button>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Add Equipment Form */}
+          <div style={{ 
+            background: '#f5f5f5', 
+            padding: 12, 
+            borderRadius: 8,
+            marginBottom: 16 
+          }}>
+            <Text strong style={{ display: 'block', marginBottom: 8 }}>Добавить оборудование/материал</Text>
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Input 
+                placeholder="Название (например: Изолятор ПС-120)"
+                value={newEquipment.name}
+                onChange={e => setNewEquipment({ ...newEquipment, name: e.target.value })}
+                size="large"
+              />
+              <Space>
+                <InputNumber
+                  min={1}
+                  value={newEquipment.quantity}
+                  onChange={v => setNewEquipment({ ...newEquipment, quantity: v || 1 })}
+                  size="large"
+                  style={{ width: 80 }}
+                />
+                <Select
+                  value={newEquipment.unit}
+                  onChange={v => setNewEquipment({ ...newEquipment, unit: v })}
+                  size="large"
+                  style={{ width: 100 }}
+                >
+                  <Select.Option value="шт">шт</Select.Option>
+                  <Select.Option value="м">м</Select.Option>
+                  <Select.Option value="кг">кг</Select.Option>
+                  <Select.Option value="компл">компл</Select.Option>
+                </Select>
+                <Button 
+                  type="primary" 
+                  icon={<PlusOutlined />}
+                  onClick={handleAddEquipment}
+                  size="large"
+                >
+                  Добавить
+                </Button>
+              </Space>
+            </Space>
+          </div>
 
           <Divider style={{ margin: '16px 0' }}>💬 Комментарий</Divider>
 

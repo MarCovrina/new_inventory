@@ -68,11 +68,15 @@ export const technicalPlaces = [
       material: 'Железобетонная',
       height: 26.5,
       foundationType: 'Монолитный',
-      groundingExists: true,
-      condition: 'Хорошее'
+      groundingExists: true
     },
     comment: 'Необходим ремонт заземления',
-    photos: []
+    photos: [],
+    equipment: [
+      { id: 1, name: 'Изолятор ПС-120', quantity: 6, unit: 'шт', markedForDeletion: false },
+      { id: 2, name: 'Грозозащитный трос', quantity: 1, unit: 'м', markedForDeletion: false },
+      { id: 3, name: 'Арматура линейная', quantity: 12, unit: 'шт', markedForDeletion: false }
+    ]
   },
   {
     id: 2,
@@ -87,11 +91,14 @@ export const technicalPlaces = [
       material: 'Железобетонная',
       height: 26.5,
       foundationType: 'Монолитный',
-      groundingExists: true,
-      condition: 'Хорошее'
+      groundingExists: true
     },
     comment: '',
-    photos: []
+    photos: [],
+    equipment: [
+      { id: 4, name: 'Изолятор ПС-120', quantity: 6, unit: 'шт', markedForDeletion: false },
+      { id: 5, name: 'Арматура линейная', quantity: 12, unit: 'шт', markedForDeletion: false }
+    ]
   },
   {
     id: 3,
@@ -106,11 +113,11 @@ export const technicalPlaces = [
       wireCrossSection: 120,
       cableCount: 3,
       sag: 8.5,
-      groundWireExists: true,
-      condition: 'Удовлетворительное'
+      groundWireExists: true
     },
     comment: 'Обнаружен повреждение грозотроса',
-    photos: []
+    photos: [],
+    equipment: []
   },
   {
     id: 4,
@@ -125,11 +132,13 @@ export const technicalPlaces = [
       material: 'Железобетонная',
       height: 26.5,
       foundationType: 'Монолитный',
-      groundingExists: true,
-      condition: 'Хорошее'
+      groundingExists: true
     },
     comment: '',
-    photos: []
+    photos: [],
+    equipment: [
+      { id: 6, name: 'Изолятор ПС-120', quantity: 6, unit: 'шт', markedForDeletion: false }
+    ]
   },
   {
     id: 5,
@@ -144,11 +153,11 @@ export const technicalPlaces = [
       material: 'Железобетонная',
       height: 26.5,
       foundationType: 'Монолитный',
-      groundingExists: false,
-      condition: 'Удовлетворительное'
+      groundingExists: false
     },
     comment: '',
-    photos: []
+    photos: [],
+    equipment: []
   },
   // Для Подстанции "Центральная" (id объекта = 2)
   {
@@ -165,11 +174,14 @@ export const technicalPlaces = [
       voltageLV: 10,
       manufactureYear: 1990,
       oilLevel: 'Нормальный',
-      temperature: 65,
-      condition: 'Хорошее'
+      temperature: 65
     },
     comment: '',
-    photos: []
+    photos: [],
+    equipment: [
+      { id: 7, name: 'Расширитель масла', quantity: 1, unit: 'шт', markedForDeletion: false },
+      { id: 8, name: 'Термометр', quantity: 1, unit: 'шт', markedForDeletion: false }
+    ]
   },
   {
     id: 7,
@@ -185,11 +197,11 @@ export const technicalPlaces = [
       voltageLV: 10,
       manufactureYear: 1990,
       oilLevel: 'Пониженный',
-      temperature: 72,
-      condition: 'Удовлетворительное'
+      temperature: 72
     },
     comment: 'Требуется долив масла',
-    photos: []
+    photos: [],
+    equipment: []
   },
   {
     id: 8,
@@ -201,11 +213,11 @@ export const technicalPlaces = [
       cellNumber: '1',
       voltage: 110,
       ratedCurrent: 1000,
-      断路器Type: 'ВМТ-110',
-      condition: 'Хорошее'
+      断路器Type: 'ВМТ-110'
     },
     comment: '',
-    photos: []
+    photos: [],
+    equipment: []
   }
 ];
 
