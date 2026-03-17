@@ -231,13 +231,18 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
   };
 
   const handleToggleDelete = (id) => {
-    setEquipment(prev => prev.map(item => 
-      item.id === id ? { ...item, markedForDeletion: !item.markedForDeletion } : item
-    ));
-  };
-
-  const handleDeleteEquipment = (id) => {
-    handleToggleDelete(id);
+    // Find the item
+    const item = equipment.find(e => e.id === id);
+    if (item && item.isNew) {
+      // User-added items are immediately deleted
+      setEquipment(prev => prev.filter(e => e.id !== id));
+      message.info('Позиция удалена');
+    } else {
+      // Database items are marked for deletion
+      setEquipment(prev => prev.map(item => 
+        item.id === id ? { ...item, markedForDeletion: !item.markedForDeletion } : item
+      ));
+    }
   };
 
   // Mobile-optimized Coordinate Picker
@@ -469,6 +474,9 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
                       </Text>
                       {item.markedForDeletion && (
                         <Tag color="red" style={{ marginLeft: 8 }}>На удаление</Tag>
+                      )}
+                      {item.isNew && (
+                        <Tag color="green" style={{ marginLeft: 8 }}>Новая</Tag>
                       )}
                     </div>
                     <Button 
