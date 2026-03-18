@@ -18,7 +18,8 @@ import {
   message,
   Tabs,
   Descriptions,
-  Progress
+  Progress,
+  Collapse
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -36,7 +37,7 @@ import {
   MessageOutlined,
   SearchOutlined
 } from '@ant-design/icons';
-import { getTechnicalPlacesByObjectId, technicalPlaceCharacteristics } from '../data/mockData';
+import { getTechnicalPlacesByObjectId, technicalPlaceCharacteristics, technicalPlaceTypes } from '../data/mockData';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -137,7 +138,9 @@ const CoordinatePickerModal = ({ open, value, onSave, onCancel }) => {
 const TechnicalPlaceCard = ({ place, onClick, isSelected }) => {
   const statusIcon = place.isInspected 
     ? <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 18 }} /> 
-    : <ClockCircleOutlined style={{ color: '#faad14', fontSize: 18 }} />;
+    : <ClockCircleOutlined style={{ color: '#bfbfbf', fontSize: 18 }} />;
+
+  const borderLeftColor = place.isInspected ? '#52c41a' : '#bfbfbf';
 
   return (
     <Card
@@ -145,7 +148,8 @@ const TechnicalPlaceCard = ({ place, onClick, isSelected }) => {
       onClick={() => onClick(place)}
       style={{ 
         borderColor: isSelected ? '#1890ff' : '#d9d9d9',
-        backgroundColor: place.isInspected ? '#f6ffed' : '#fffbf0',
+        borderLeft: `4px solid ${borderLeftColor}`,
+        backgroundColor: place.isInspected ? '#f6ffed' : '#fafafa',
         borderRadius: 12,
         marginBottom: 12
       }}
@@ -775,6 +779,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [technicalPlaces, setTechnicalPlaces] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedType, setSelectedType] = useState('all');
 
   // Helper function to format name: LastName Initials (on one line)
   const formatName = (fullName) => {
@@ -797,6 +802,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
     }
     setSelectedPlace(null);
     setSearchQuery('');
+    setSelectedType('all');
   }, [sheet, open]);
 
   const handlePlaceClick = (place) => {
@@ -852,25 +858,25 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
         </div>
 
         {/* Block 2: modal-header__object-card */}
-        <Card style={{ borderRadius: 12, marginBottom: 16 }}>
+        <Card style={{ borderRadius: 12, marginBottom: 16, background: '#f5f5f5' }} styles={{ body: { padding: '8px 12px' } }}>
           {/* Object name with type tag in upper right */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <h3 style={{ margin: 0 }}>{sheet.object.name}</h3>
-            <Tag>{sheet.object.type}</Tag>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+            <h3 style={{ margin: 0, fontSize: 15, lineHeight: '20px' }}>{sheet.object.name}</h3>
+            <Tag color="#595959">{sheet.object.type}</Tag>
           </div>
           {/* Meta fields: Назначил, Исполнитель, Статус */}
           <Row gutter={16}>
             <Col span={6}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Назначил</Text>
-              <div>{formatName(sheet.master?.name)}</div>
+              <Text type="secondary" style={{ fontSize: 11, lineHeight: '14px' }}>Назначил</Text>
+              <div style={{ lineHeight: '18px' }}>{formatName(sheet.master?.name)}</div>
             </Col>
             <Col span={6}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Исполнитель</Text>
-              <div>{formatName(sheet.executor?.name)}</div>
+              <Text type="secondary" style={{ fontSize: 11, lineHeight: '14px' }}>Исполнитель</Text>
+              <div style={{ lineHeight: '18px' }}>{formatName(sheet.executor?.name)}</div>
             </Col>
             <Col span={12}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Статус</Text>
-              <div>
+              <Text type="secondary" style={{ fontSize: 11, lineHeight: '14px' }}>Статус</Text>
+              <div style={{ lineHeight: '18px' }}>
                 <Tag color={
                   sheet.status === 'Согласован' ? 'success' :
                   sheet.status === 'В работе' ? 'processing' :
@@ -912,69 +918,94 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
           style={{ marginBottom: 16 }}
         />
 
-        {/* Technical Places List - Grouped by inspection status */}
+        {/* Filter by technical place type */}
+        <div style={{ marginBottom: 16 }}>
+          <Text strong style={{ marginRight: 12 }}>Тип:</Text>
+          <Space wrap>
+            <Button 
+              type={selectedType === 'all' ? 'primary' : 'default'}
+              onClick={() => setSelectedType('all')}
+              size="small"
+            >
+              Все ({technicalPlaces.length})
+            </Button>
+            {[...new Set(technicalPlaces.map(p => p.type))].map(type => (
+              <Button 
+                key={type}
+                type={selectedType === type ? 'primary' : 'default'}
+                onClick={() => setSelectedType(type)}
+                size="small"
+              >
+                {type} ({technicalPlaces.filter(p => p.type === type).length})
+              </Button>
+            ))}
+          </Space>
+        </div>
+
+        {/* Technical Places List - Grouped by inspection status with Collapse */}
         <div style={{ maxHeight: '50vh', overflowY: 'auto' }}>
-          {/* Group: Not Inspected */}
-          {technicalPlaces
-            .filter(place => 
-              !searchQuery || 
-              (place.dispatchName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-              (place.name?.toLowerCase().includes(searchQuery.toLowerCase()))
-            )
-            .filter(place => !place.isInspected)
-            .length > 0 && (
-              <>
-                <Text strong style={{ display: 'block', marginBottom: 8, color: '#faad14' }}>
-                  ⏺ Не осмотрено ({technicalPlaces.filter(place => !place.isInspected).length})
-                </Text>
-                {technicalPlaces
-                  .filter(place => 
-                    !searchQuery || 
-                    (place.dispatchName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                    (place.name?.toLowerCase().includes(searchQuery.toLowerCase()))
-                  )
-                  .filter(place => !place.isInspected)
-                  .map(place => (
-                    <TechnicalPlaceCard 
-                      key={place.id}
-                      place={place} 
-                      onClick={handlePlaceClick}
-                      isSelected={false}
-                    />
-                  ))}
-              </>
-            )}
-          
-          {/* Group: Inspected */}
-          {technicalPlaces
-            .filter(place => 
-              !searchQuery || 
-              (place.dispatchName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-              (place.name?.toLowerCase().includes(searchQuery.toLowerCase()))
-            )
-            .filter(place => place.isInspected)
-            .length > 0 && (
-              <>
-                <Text strong style={{ display: 'block', marginBottom: 8, marginTop: 16, color: '#52c41a' }}>
-                  ✓ Осмотрено ({technicalPlaces.filter(place => place.isInspected).length})
-                </Text>
-                {technicalPlaces
-                  .filter(place => 
-                    !searchQuery || 
-                    (place.dispatchName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                    (place.name?.toLowerCase().includes(searchQuery.toLowerCase()))
-                  )
-                  .filter(place => place.isInspected)
-                  .map(place => (
-                    <TechnicalPlaceCard 
-                      key={place.id}
-                      place={place} 
-                      onClick={handlePlaceClick}
-                      isSelected={false}
-                    />
-                  ))}
-              </>
-            )}
+          <Collapse 
+            defaultActiveKey={['notInspected', 'inspected']} 
+            ghost
+            items={[
+              {
+                key: 'notInspected',
+                label: (
+                  <Text style={{ color: '#8c8c8c', fontSize: 14, textTransform: 'uppercase' }}>
+                    Не осмотрено ({technicalPlaces.filter(place => !place.isInspected).length})
+                  </Text>
+                ),
+                children: (
+                  <>
+                    {technicalPlaces
+                      .filter(place => 
+                        !searchQuery || 
+                        (place.dispatchName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                        (place.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+                      )
+                      .filter(place => selectedType === 'all' || place.type === selectedType)
+                      .filter(place => !place.isInspected)
+                      .map(place => (
+                        <TechnicalPlaceCard 
+                          key={place.id}
+                          place={place} 
+                          onClick={handlePlaceClick}
+                          isSelected={false}
+                        />
+                      ))}
+                  </>
+                )
+              },
+              {
+                key: 'inspected',
+                label: (
+                  <Text style={{ color: '#8c8c8c', fontSize: 14, textTransform: 'uppercase' }}>
+                    Осмотрено ({technicalPlaces.filter(place => place.isInspected).length})
+                  </Text>
+                ),
+                children: (
+                  <>
+                    {technicalPlaces
+                      .filter(place => 
+                        !searchQuery || 
+                        (place.dispatchName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                        (place.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+                      )
+                      .filter(place => selectedType === 'all' || place.type === selectedType)
+                      .filter(place => place.isInspected)
+                      .map(place => (
+                        <TechnicalPlaceCard 
+                          key={place.id}
+                          place={place} 
+                          onClick={handlePlaceClick}
+                          isSelected={false}
+                        />
+                      ))}
+                  </>
+                )
+              }
+            ]}
+          />
         </div>
 
         <Button 
