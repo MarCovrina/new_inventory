@@ -16,7 +16,9 @@ import {
   Divider,
   Upload,
   message,
-  Tabs
+  Tabs,
+  Descriptions,
+  Progress
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -736,6 +738,18 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [technicalPlaces, setTechnicalPlaces] = useState([]);
 
+  // Helper function to format name: LastName Initials (on one line)
+  const formatName = (fullName) => {
+    if (!fullName) return '-';
+    const parts = fullName.trim().split(' ');
+    if (parts.length >= 3) {
+      const lastName = parts[0];
+      const initials = parts.slice(1).map(p => p.charAt(0) + '.').join('');
+      return <span>{lastName} <Text type="secondary">{initials}</Text></span>;
+    }
+    return fullName;
+  };
+
   useEffect(() => {
     if (sheet && sheet.object) {
       const places = getTechnicalPlacesByObjectId(sheet.object.id);
@@ -791,34 +805,66 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
 
     return (
       <div style={{ padding: '0 4px' }}>
-        {/* Sheet Info */}
+        {/* Block 1: modal-header__titlebar - Sheet number */}
+        <div className="modal-header__titlebar" style={{ marginBottom: 16 }}>
+          <Text type="secondary">Лист инвентаризации</Text>
+          <Text strong style={{ fontSize: 16 }}> №{sheet.number}</Text>
+        </div>
+
+        {/* Block 2: modal-header__object-card */}
         <Card style={{ borderRadius: 12, marginBottom: 16 }}>
-          <Space direction="vertical" size={8} style={{ width: '100%' }}>
-            <div>
-              <Text type="secondary">Объект</Text>
-              <br />
-              <Text strong style={{ fontSize: 15 }}>{sheet.object.name}</Text>
-              <Tag style={{ marginLeft: 8 }}>{sheet.object.type}</Tag>
-            </div>
-            <div>
-              <Text type="secondary">Исполнитель</Text>
-              <br />
-              <Text>{sheet.executor?.name}</Text>
-            </div>
-            <div>
-              <Text type="secondary">Статус</Text>
-              <br />
-              <Tag color={
-                sheet.status === 'Согласован' ? 'success' :
-                sheet.status === 'В работе' ? 'processing' :
-                sheet.status === 'Сдан на проверку' ? 'warning' :
-                sheet.status === 'Возвращен на доработку' ? 'error' : 'default'
-              }>
-                {sheet.status}
-              </Tag>
-            </div>
-          </Space>
+          {/* Object name with type tag in upper right */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+            <h3 style={{ margin: 0 }}>{sheet.object.name}</h3>
+            <Tag>{sheet.object.type}</Tag>
+          </div>
+          {/* Meta fields: Исполнитель, Назначил, Дата with values below labels */}
+          <Row gutter={16}>
+            <Col span={6}>
+              <Text type="secondary" style={{ fontSize: 12 }}>Исполнитель</Text>
+              <div>{formatName(sheet.executor?.name)}</div>
+            </Col>
+            <Col span={6}>
+              <Text type="secondary" style={{ fontSize: 12 }}>Назначил</Text>
+              <div>{formatName(sheet.master?.name)}</div>
+            </Col>
+            <Col span={6}>
+              <Text type="secondary" style={{ fontSize: 12 }}>Дата</Text>
+              <div><time dateTime={sheet.createdAt}>{sheet.createdAt}</time></div>
+            </Col>
+            <Col span={6}>
+              <Text type="secondary" style={{ fontSize: 12 }}>Статус</Text>
+              <div>
+                <Tag color={
+                  sheet.status === 'Согласован' ? 'success' :
+                  sheet.status === 'В работе' ? 'processing' :
+                  sheet.status === 'Сдан на проверку' ? 'warning' :
+                  sheet.status === 'Возвращен на доработку' ? 'error' : 'default'
+                }>
+                  {sheet.status}
+                </Tag>
+              </div>
+            </Col>
+          </Row>
         </Card>
+
+        {/* Block 3: modal-header__progress */}
+        <div 
+          className="modal-header__progress" 
+          role="progressbar" 
+          aria-valuenow={technicalPlaces.filter(p => p.isInspected).length}
+          aria-valuemax={technicalPlaces.length}
+          style={{ marginBottom: 16 }}
+        >
+          <Progress 
+            showInfo={false} 
+            size="small"
+            percent={technicalPlaces.length > 0 ? Math.round((technicalPlaces.filter(p => p.isInspected).length / technicalPlaces.length) * 100) : 0}
+          />
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            Осмотрено: {technicalPlaces.filter(p => p.isInspected).length} / {technicalPlaces.length}
+          </Text>
+        </div>
 
         <Divider style={{ margin: '16px 0' }}>📋 Технические места ({technicalPlaces.length})</Divider>
 
@@ -850,11 +896,12 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
 
   return (
     <Modal
-      title={selectedPlace ? `${selectedPlace.name}` : `Лист ${sheet.number}`}
+      title={null}
       open={open}
       onCancel={onClose}
       width="95%"
       style={{ maxWidth: 600 }}
+      closable={true}
       footer={selectedPlace ? null : [
         <Button key="close" onClick={onClose} size="large">
           Закрыть
