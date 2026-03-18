@@ -15,7 +15,8 @@ import {
   Checkbox,
   Divider,
   Upload,
-  message 
+  message,
+  Tabs
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -25,7 +26,11 @@ import {
   ArrowLeftOutlined,
   UploadOutlined,
   EnvironmentOutlined,
-  EditOutlined 
+  EditOutlined,
+  FormOutlined,
+  ToolOutlined,
+  CameraOutlined,
+  MessageOutlined
 } from '@ant-design/icons';
 import { getTechnicalPlacesByObjectId, technicalPlaceCharacteristics } from '../data/mockData';
 
@@ -165,7 +170,7 @@ const TechnicalPlaceCard = ({ place, onClick, isSelected }) => {
   );
 };
 
-const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
+const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
   const [form] = Form.useForm();
   const [characteristics, setCharacteristics] = useState(place.characteristics || {});
   const [photos, setPhotos] = useState(place.photos || []);
@@ -397,180 +402,229 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
   return (
     <div style={{ padding: '0 4px' }}>
       <Card style={{ borderRadius: 12 }}>
-        <Divider style={{ margin: '16px 0' }}>Характеристики</Divider>
-
-        <Form
-          form={form}
-          layout="vertical"
-          onValuesChange={handleValuesChange}
-        >
-          <Row gutter={[12, 0]}>
-            {charDefinitions.map(char => renderCharacteristicField(char))}
-          </Row>
-
-          <Divider style={{ margin: '16px 0' }}>📷 Фотографии ({photos.length}/8)</Divider>
-
-          <Form.Item style={{ marginBottom: 8 }}>
-            <div style={{ 
-              minHeight: photos.length >= 5 ? 200 : 120, 
-              transition: 'min-height 0.3s ease'
-            }}>
-              <Upload
-                listType="picture-card"
-                fileList={photos}
-                onChange={handlePhotoUpload}
-                onRemove={handleRemovePhoto}
-                beforeUpload={(file) => {
-                  const isImage = file.type.startsWith('image/');
-                  if (!isImage) {
-                    message.error('Можно загружать только изображения!');
-                    return Upload.LIST_IGNORE;
-                  }
-                  return false;
-                }}
-                maxCount={8}
-                multiple
-                accept="image/*"
-              >
-                {photos.length < 8 && (
-                  <div>
-                    <UploadOutlined style={{ fontSize: 24 }} />
-                    <div style={{ marginTop: 4, fontSize: 12 }}>Добавить</div>
+        <Tabs
+          defaultActiveKey="1"
+          size="large"
+          animated={false}
+          style={{ width: '100%' }}
+          items={[
+            {
+              key: '1',
+              label: (
+                <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                  <FormOutlined style={{ fontSize: 20 }} />
+                  <span style={{ fontSize: 10 }}>Характеристики</span>
+                </span>
+              ),
+              children: (
+                <>
+                  <Form
+                    form={form}
+                    layout="vertical"
+                    onValuesChange={handleValuesChange}
+                  >
+                    <Row gutter={[12, 0]}>
+                      {charDefinitions.map(char => renderCharacteristicField(char))}
+                    </Row>
+                  </Form>
+                </>
+              )
+            },
+            {
+              key: '2',
+              label: (
+                <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                  <ToolOutlined style={{ fontSize: 20 }} />
+                  <span style={{ fontSize: 10 }}>Оборудование</span>
+                </span>
+              ),
+              children: (
+                <>
+                  {/* Equipment and Materials Section */}
+                  <div style={{ marginBottom: 16 }}>
+                    {equipment.length === 0 ? (
+                      <Text type="secondary">Оборудование и материалы не добавлены</Text>
+                    ) : (
+                      equipment.map((item) => (
+                        <Card 
+                          key={item.id} 
+                          size="small" 
+                          style={{ 
+                            marginBottom: 8, 
+                            opacity: item.markedForDeletion ? 0.5 : 1,
+                            backgroundColor: item.markedForDeletion ? '#fff1f0' : '#f6ffed'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                            <div style={{ flex: 1 }}>
+                              <Text delete={item.markedForDeletion}>{item.name}</Text>
+                              <Text type="secondary" style={{ marginLeft: 8 }}>
+                                ({item.quantity} {item.unit})
+                              </Text>
+                              {item.isNew && (
+                                <Tag color="green" style={{ marginLeft: 8 }}>Новое</Tag>
+                              )}
+                              {item.markedForDeletion && (
+                                <Tag color="red" style={{ marginLeft: 8 }}>На удаление</Tag>
+                              )}
+                            </div>
+                            <Space>
+                              {!item.markedForDeletion && (
+                                <Button 
+                                  type="link" 
+                                  icon={<EditOutlined />}
+                                  onClick={() => handleOpenQuantityEdit(item)}
+                                  size="small"
+                                >
+                                  Изменить количество
+                                </Button>
+                              )}
+                              {item.isNew ? (
+                                <Button 
+                                  type="text" 
+                                  danger
+                                  icon={<DeleteOutlined />}
+                                  onClick={() => handleToggleDelete(item.id)}
+                                  size="small"
+                                >
+                                  Удалить
+                                </Button>
+                              ) : (
+                                <Button 
+                                  type="text" 
+                                  danger={!item.markedForDeletion}
+                                  icon={item.markedForDeletion ? <CheckCircleOutlined /> : <DeleteOutlined />}
+                                  onClick={() => handleToggleDelete(item.id)}
+                                  size="small"
+                                >
+                                  {item.markedForDeletion ? 'Отменить' : 'Удалить'}
+                                </Button>
+                              )}
+                            </Space>
+                          </div>
+                        </Card>
+                      ))
+                    )}
                   </div>
-                )}
-              </Upload>
-            </div>
-          </Form.Item>
 
-          {/* Equipment and Materials Section */}
-          <Divider style={{ margin: '16px 0' }}>🔧 Оборудование и материалы</Divider>
-
-          {/* Equipment List */}
-          <div style={{ marginBottom: 16 }}>
-            {equipment.length === 0 ? (
-              <Text type="secondary">Оборудование и материалы не добавлены</Text>
-            ) : (
-              equipment.map((item) => (
-                <Card 
-                  key={item.id} 
-                  size="small" 
-                  style={{ 
-                    marginBottom: 8, 
-                    opacity: item.markedForDeletion ? 0.5 : 1,
-                    backgroundColor: item.markedForDeletion ? '#fff1f0' : '#f6ffed'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                    <div style={{ flex: 1 }}>
-                      <Text delete={item.markedForDeletion}>{item.name}</Text>
-                      <Text type="secondary" style={{ marginLeft: 8 }}>
-                        ({item.quantity} {item.unit})
-                      </Text>
-                      {item.isNew && (
-                        <Tag color="green" style={{ marginLeft: 8 }}>Новое</Tag>
-                      )}
-                      {item.markedForDeletion && (
-                        <Tag color="red" style={{ marginLeft: 8 }}>На удаление</Tag>
-                      )}
-                    </div>
-                    <Space>
-                      {!item.markedForDeletion && (
-                        <Button 
-                          type="link" 
-                          icon={<EditOutlined />}
-                          onClick={() => handleOpenQuantityEdit(item)}
-                          size="small"
+                  {/* Add Equipment Form */}
+                  <div style={{ 
+                    background: '#f5f5f5', 
+                    padding: 12, 
+                    borderRadius: 8,
+                    marginBottom: 16 
+                  }}>
+                    <Text strong style={{ display: 'block', marginBottom: 8 }}>Добавить оборудование/материал</Text>
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                      <Input 
+                        placeholder="Название (например: Изолятор ПС-120)"
+                        value={newEquipment.name}
+                        onChange={e => setNewEquipment({ ...newEquipment, name: e.target.value })}
+                        size="large"
+                      />
+                      <Space>
+                        <InputNumber
+                          min={1}
+                          value={newEquipment.quantity}
+                          onChange={v => setNewEquipment({ ...newEquipment, quantity: v || 1 })}
+                          size="large"
+                          style={{ width: 80 }}
+                        />
+                        <Select
+                          value={newEquipment.unit}
+                          onChange={v => setNewEquipment({ ...newEquipment, unit: v })}
+                          size="large"
+                          style={{ width: 100 }}
                         >
-                          Изменить количество
-                        </Button>
-                      )}
-                      {item.isNew ? (
+                          <Select.Option value="шт">шт</Select.Option>
+                          <Select.Option value="м">м</Select.Option>
+                          <Select.Option value="кг">кг</Select.Option>
+                          <Select.Option value="компл">компл</Select.Option>
+                        </Select>
                         <Button 
-                          type="text" 
-                          danger
-                          icon={<DeleteOutlined />}
-                          onClick={() => handleToggleDelete(item.id)}
-                          size="small"
+                          type="primary" 
+                          icon={<PlusOutlined />}
+                          onClick={handleAddEquipment}
+                          size="large"
                         >
-                          Удалить
+                          Добавить
                         </Button>
-                      ) : (
-                        <Button 
-                          type="text" 
-                          danger={!item.markedForDeletion}
-                          icon={item.markedForDeletion ? <CheckCircleOutlined /> : <DeleteOutlined />}
-                          onClick={() => handleToggleDelete(item.id)}
-                          size="small"
-                        >
-                          {item.markedForDeletion ? 'Отменить' : 'Удалить'}
-                        </Button>
-                      )}
+                      </Space>
                     </Space>
                   </div>
-                </Card>
-              ))
-            )}
-          </div>
+                </>
+              )
+            },
+            {
+              key: '3',
+              label: (
+                <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                  <CameraOutlined style={{ fontSize: 20 }} />
+                  <span style={{ fontSize: 10 }}>Фотографии ({photos.length}/8)</span>
+                </span>
+              ),
+              children: (
+                <>
+                  <div style={{ 
+                    minHeight: photos.length >= 5 ? 200 : 120, 
+                    transition: 'min-height 0.3s ease'
+                  }}>
+                    <Upload
+                      listType="picture-card"
+                      fileList={photos}
+                      onChange={handlePhotoUpload}
+                      onRemove={handleRemovePhoto}
+                      beforeUpload={(file) => {
+                        const isImage = file.type.startsWith('image/');
+                        if (!isImage) {
+                          message.error('Можно загружать только изображения!');
+                          return Upload.LIST_IGNORE;
+                        }
+                        return false;
+                      }}
+                      maxCount={8}
+                      multiple
+                      accept="image/*"
+                    >
+                      {photos.length < 8 && (
+                        <div>
+                          <UploadOutlined style={{ fontSize: 24 }} />
+                          <div style={{ marginTop: 4, fontSize: 12 }}>Добавить</div>
+                        </div>
+                      )}
+                    </Upload>
+                  </div>
+                </>
+              )
+            },
+            {
+              key: '4',
+              label: (
+                <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                  <MessageOutlined style={{ fontSize: 20 }} />
+                  <span style={{ fontSize: 10 }}>Комментарий</span>
+                </span>
+              ),
+              children: (
+                <>
+                  <Form form={form} layout="vertical">
+                    <Form.Item label="" name="comment" style={{ marginBottom: 16 }}>
+                      <TextArea 
+                        rows={6} 
+                        placeholder="Введите комментарий к техническому месту..."
+                        size="large"
+                      />
+                    </Form.Item>
+                  </Form>
+                </>
+              )
+            }
+          ]}
+        />
+      </Card>
 
-          {/* Add Equipment Form */}
-          <div style={{ 
-            background: '#f5f5f5', 
-            padding: 12, 
-            borderRadius: 8,
-            marginBottom: 16 
-          }}>
-            <Text strong style={{ display: 'block', marginBottom: 8 }}>Добавить оборудование/материал</Text>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Input 
-                placeholder="Название (например: Изолятор ПС-120)"
-                value={newEquipment.name}
-                onChange={e => setNewEquipment({ ...newEquipment, name: e.target.value })}
-                size="large"
-              />
-              <Space>
-                <InputNumber
-                  min={1}
-                  value={newEquipment.quantity}
-                  onChange={v => setNewEquipment({ ...newEquipment, quantity: v || 1 })}
-                  size="large"
-                  style={{ width: 80 }}
-                />
-                <Select
-                  value={newEquipment.unit}
-                  onChange={v => setNewEquipment({ ...newEquipment, unit: v })}
-                  size="large"
-                  style={{ width: 100 }}
-                >
-                  <Select.Option value="шт">шт</Select.Option>
-                  <Select.Option value="м">м</Select.Option>
-                  <Select.Option value="кг">кг</Select.Option>
-                  <Select.Option value="компл">компл</Select.Option>
-                </Select>
-                <Button 
-                  type="primary" 
-                  icon={<PlusOutlined />}
-                  onClick={handleAddEquipment}
-                  size="large"
-                >
-                  Добавить
-                </Button>
-              </Space>
-            </Space>
-          </div>
-
-          <Divider style={{ margin: '16px 0' }}>💬 Комментарий</Divider>
-
-          <Form.Item label="" name="comment" style={{ marginBottom: 16 }}>
-            <TextArea 
-              rows={3} 
-              placeholder="Введите комментарий..."
-              size="large"
-            />
-          </Form.Item>
-        </Form>
-
-        {/* Quantity Edit Modal */}
-        <Modal
+      {/* Quantity Edit Modal */}
+      <Modal
           title="Изменить количество"
           open={quantityEditModal.open}
           onCancel={() => setQuantityEditModal({ open: false, item: null, value: 1 })}
@@ -594,35 +648,25 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
           </div>
         </Modal>
 
-        {/* Sticky Footer with Action Buttons */}
-        <div style={{ 
-          position: 'sticky', 
-          bottom: 0, 
-          background: '#fff',
-          padding: '16px 0',
-          marginLeft: -16,
-          marginRight: -16,
-          marginBottom: -16,
-          paddingLeft: 16,
-          paddingRight: 16,
-          borderTop: '1px solid #f0f0f0',
-          display: 'flex',
-          gap: 12
-        }}>
-          <Button onClick={onBack} size="large" style={{ flex: 1 }}>
-            Отмена
-          </Button>
-          <Button 
-            type="primary" 
-            icon={<CheckCircleOutlined />} 
-            onClick={handleSave}
-            size="large"
-            style={{ flex: 2 }}
-          >
-            Сохранить
-          </Button>
-        </div>
-      </Card>
+      {/* Sticky Footer with Action Buttons */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'flex-end', 
+        gap: 12,
+        padding: '16px 0'
+      }}>
+        <Button onClick={onClose} size="large">
+          Назад к списку
+        </Button>
+        <Button 
+          type="primary" 
+          icon={<CheckCircleOutlined />} 
+          onClick={handleSave}
+          size="large"
+        >
+          Сохранить
+        </Button>
+      </div>
     </div>
   );
 };
@@ -679,7 +723,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
         <TechnicalPlaceForm 
           place={selectedPlace} 
           onSave={handlePlaceSave}
-          onBack={handleBackToList}
+          onClose={handleBackToList}
         />
       );
     }
