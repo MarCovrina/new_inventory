@@ -158,11 +158,6 @@ const TechnicalPlaceCard = ({ place, onClick, isSelected }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ flex: 1 }}>
           <Text strong style={{ fontSize: 16, display: 'block' }}>{place.name}</Text>
-          {place.dispatchName && (
-            <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
-              📡 {place.dispatchName}
-            </Text>
-          )}
           <Tag color="blue" style={{ marginTop: 4 }}>{place.type}</Tag>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 100, justifyContent: 'flex-end' }}>
