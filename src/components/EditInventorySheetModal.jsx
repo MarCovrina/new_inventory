@@ -858,7 +858,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
             <h3 style={{ margin: 0 }}>{sheet.object.name}</h3>
             <Tag>{sheet.object.type}</Tag>
           </div>
-          {/* Meta fields: Назначил, Исполнитель, Дата with values below labels */}
+          {/* Meta fields: Назначил, Исполнитель, Статус */}
           <Row gutter={16}>
             <Col span={6}>
               <Text type="secondary" style={{ fontSize: 12 }}>Назначил</Text>
@@ -868,11 +868,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
               <Text type="secondary" style={{ fontSize: 12 }}>Исполнитель</Text>
               <div>{formatName(sheet.executor?.name)}</div>
             </Col>
-            <Col span={6}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Дата</Text>
-              <div><time dateTime={sheet.createdAt}>{sheet.createdAt}</time></div>
-            </Col>
-            <Col span={6}>
+            <Col span={12}>
               <Text type="secondary" style={{ fontSize: 12 }}>Статус</Text>
               <div>
                 <Tag color={
