@@ -24,7 +24,8 @@ import {
   ClockCircleOutlined,
   ArrowLeftOutlined,
   UploadOutlined,
-  EnvironmentOutlined 
+  EnvironmentOutlined,
+  EditOutlined 
 } from '@ant-design/icons';
 import { getTechnicalPlacesByObjectId, technicalPlaceCharacteristics } from '../data/mockData';
 
@@ -212,6 +213,7 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
   // Equipment management
   const [equipment, setEquipment] = useState([]);
   const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1, unit: 'шт' });
+  const [quantityEditModal, setQuantityEditModal] = useState({ open: false, item: null, value: 1 });
 
   const handleAddEquipment = () => {
     if (!newEquipment.name.trim()) {
@@ -231,18 +233,34 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
   };
 
   const handleToggleDelete = (id) => {
-    // Find the item
     const item = equipment.find(e => e.id === id);
-    if (item && item.isNew) {
-      // User-added items are immediately deleted
+    if (item.isNew) {
+      // New items are completely removed when delete is clicked
       setEquipment(prev => prev.filter(e => e.id !== id));
-      message.info('Позиция удалена');
     } else {
-      // Database items are marked for deletion
+      // Original items are marked for deletion
       setEquipment(prev => prev.map(item => 
         item.id === id ? { ...item, markedForDeletion: !item.markedForDeletion } : item
       ));
     }
+  };
+
+  const handleDeleteEquipment = (id) => {
+    handleToggleDelete(id);
+  };
+
+  const handleOpenQuantityEdit = (item) => {
+    setQuantityEditModal({ open: true, item: item, value: item.quantity });
+  };
+
+  const handleSaveQuantity = () => {
+    setEquipment(prev => prev.map(item => 
+      item.id === quantityEditModal.item.id 
+        ? { ...item, quantity: quantityEditModal.value } 
+        : item
+    ));
+    setQuantityEditModal({ open: false, item: null, value: 1 });
+    message.success('Количество обновлено');
   };
 
   // Mobile-optimized Coordinate Picker
@@ -378,31 +396,7 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
 
   return (
     <div style={{ padding: '0 4px' }}>
-      {/* Sticky Header with Back Button */}
-      <div style={{ 
-        position: 'sticky', 
-        top: 0, 
-        background: '#fff', 
-        zIndex: 10, 
-        padding: '12px 0',
-        borderBottom: '1px solid #f0f0f0',
-        marginBottom: 16,
-        marginLeft: -4,
-        marginRight: -4
-      }}>
-        <Button 
-          icon={<ArrowLeftOutlined />} 
-          onClick={onBack}
-          size="large"
-        >
-          Назад
-        </Button>
-      </div>
-
       <Card style={{ borderRadius: 12 }}>
-        <Title level={4} style={{ marginBottom: 8 }}>{place.name}</Title>
-        <Tag color="blue" style={{ marginBottom: 16 }}>{place.type}</Tag>
-
         <Divider style={{ margin: '16px 0' }}>Характеристики</Divider>
 
         <Form
@@ -466,27 +460,52 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
                     backgroundColor: item.markedForDeletion ? '#fff1f0' : '#f6ffed'
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <div style={{ flex: 1 }}>
                       <Text delete={item.markedForDeletion}>{item.name}</Text>
                       <Text type="secondary" style={{ marginLeft: 8 }}>
                         ({item.quantity} {item.unit})
                       </Text>
+                      {item.isNew && (
+                        <Tag color="green" style={{ marginLeft: 8 }}>Новое</Tag>
+                      )}
                       {item.markedForDeletion && (
                         <Tag color="red" style={{ marginLeft: 8 }}>На удаление</Tag>
                       )}
-                      {item.isNew && (
-                        <Tag color="green" style={{ marginLeft: 8 }}>Новая</Tag>
-                      )}
                     </div>
-                    <Button 
-                      type="text" 
-                      danger={!item.markedForDeletion}
-                      icon={item.markedForDeletion ? <CheckCircleOutlined /> : <DeleteOutlined />}
-                      onClick={() => handleToggleDelete(item.id)}
-                    >
-                      {item.markedForDeletion ? 'Отменить' : 'Удалить'}
-                    </Button>
+                    <Space>
+                      {!item.markedForDeletion && (
+                        <Button 
+                          type="link" 
+                          icon={<EditOutlined />}
+                          onClick={() => handleOpenQuantityEdit(item)}
+                          size="small"
+                        >
+                          Изменить количество
+                        </Button>
+                      )}
+                      {item.isNew ? (
+                        <Button 
+                          type="text" 
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => handleToggleDelete(item.id)}
+                          size="small"
+                        >
+                          Удалить
+                        </Button>
+                      ) : (
+                        <Button 
+                          type="text" 
+                          danger={!item.markedForDeletion}
+                          icon={item.markedForDeletion ? <CheckCircleOutlined /> : <DeleteOutlined />}
+                          onClick={() => handleToggleDelete(item.id)}
+                          size="small"
+                        >
+                          {item.markedForDeletion ? 'Отменить' : 'Удалить'}
+                        </Button>
+                      )}
+                    </Space>
                   </div>
                 </Card>
               ))
@@ -549,6 +568,31 @@ const TechnicalPlaceForm = ({ place, onSave, onBack }) => {
             />
           </Form.Item>
         </Form>
+
+        {/* Quantity Edit Modal */}
+        <Modal
+          title="Изменить количество"
+          open={quantityEditModal.open}
+          onCancel={() => setQuantityEditModal({ open: false, item: null, value: 1 })}
+          onOk={handleSaveQuantity}
+          okText="Сохранить"
+        >
+          <div style={{ padding: '16px 0' }}>
+            <Text style={{ display: 'block', marginBottom: 8 }}>
+              {quantityEditModal.item?.name}
+            </Text>
+            <Space>
+              <InputNumber
+                min={1}
+                value={quantityEditModal.value}
+                onChange={v => setQuantityEditModal({ ...quantityEditModal, value: v || 1 })}
+                size="large"
+                style={{ width: 100 }}
+              />
+              <Text>{quantityEditModal.item?.unit}</Text>
+            </Space>
+          </div>
+        </Modal>
 
         {/* Sticky Footer with Action Buttons */}
         <div style={{ 
@@ -701,7 +745,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
 
   return (
     <Modal
-      title={selectedPlace ? `✏️ ${selectedPlace.name}` : `📄 Лист ${sheet.number}`}
+      title={selectedPlace ? `${selectedPlace.name}` : `Лист ${sheet.number}`}
       open={open}
       onCancel={onClose}
       width="95%"
