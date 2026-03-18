@@ -33,7 +33,8 @@ import {
   FormOutlined,
   ToolOutlined,
   CameraOutlined,
-  MessageOutlined
+  MessageOutlined,
+  SearchOutlined
 } from '@ant-design/icons';
 import { getTechnicalPlacesByObjectId, technicalPlaceCharacteristics } from '../data/mockData';
 
@@ -153,6 +154,11 @@ const TechnicalPlaceCard = ({ place, onClick, isSelected }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ flex: 1 }}>
           <Text strong style={{ fontSize: 16, display: 'block' }}>{place.name}</Text>
+          {place.dispatchName && (
+            <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+              📡 {place.dispatchName}
+            </Text>
+          )}
           <Tag color="blue" style={{ marginTop: 4 }}>{place.type}</Tag>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 100, justifyContent: 'flex-end' }}>
@@ -183,6 +189,8 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
   useEffect(() => {
     form.setFieldsValue({
       ...place.characteristics,
+      name: place.name || '',
+      dispatchName: place.dispatchName || '',
       comment: place.comment || ''
     });
     setPhotos(place.photos || []);
@@ -197,6 +205,8 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
     const values = form.getFieldsValue();
     onSave({
       ...place,
+      name: values.name || place.name,
+      dispatchName: values.dispatchName || '',
       characteristics: values,
       comment: values.comment,
       photos: photos,
@@ -486,6 +496,33 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
                     layout="vertical"
                     onValuesChange={handleValuesChange}
                   >
+                    {/* Name and Dispatch Name Fields */}
+                    <Row gutter={[12, 0]}>
+                      <Col xs={24} sm={12}>
+                        <Form.Item 
+                          label="Наименование" 
+                          name="name"
+                          style={{ marginBottom: 16 }}
+                        >
+                          <Input 
+                            placeholder="Например: Опора №1" 
+                            size="large"
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12}>
+                        <Form.Item 
+                          label="Диспетчерское наименование" 
+                          name="dispatchName"
+                          style={{ marginBottom: 16 }}
+                        >
+                          <Input 
+                            placeholder="Например: ПС-110кВ Северная - оп.1" 
+                            size="large"
+                          />
+                        </Form.Item>
+                      </Col>
+                    </Row>
                     <Row gutter={[12, 0]}>
                       {charDefinitions.map(char => renderCharacteristicField(char))}
                     </Row>
@@ -737,6 +774,7 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
 const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [technicalPlaces, setTechnicalPlaces] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Helper function to format name: LastName Initials (on one line)
   const formatName = (fullName) => {
@@ -758,6 +796,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
       setTechnicalPlaces([]);
     }
     setSelectedPlace(null);
+    setSearchQuery('');
   }, [sheet, open]);
 
   const handlePlaceClick = (place) => {
@@ -777,6 +816,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
       objectId: sheet.object.id,
       type: Object.keys(technicalPlaceCharacteristics)[0] || 'Опора',
       name: `Новое тех. место`,
+      dispatchName: '',
       isInspected: false,
       characteristics: {},
       comment: '',
@@ -818,15 +858,15 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
             <h3 style={{ margin: 0 }}>{sheet.object.name}</h3>
             <Tag>{sheet.object.type}</Tag>
           </div>
-          {/* Meta fields: Исполнитель, Назначил, Дата with values below labels */}
+          {/* Meta fields: Назначил, Исполнитель, Дата with values below labels */}
           <Row gutter={16}>
-            <Col span={6}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Исполнитель</Text>
-              <div>{formatName(sheet.executor?.name)}</div>
-            </Col>
             <Col span={6}>
               <Text type="secondary" style={{ fontSize: 12 }}>Назначил</Text>
               <div>{formatName(sheet.master?.name)}</div>
+            </Col>
+            <Col span={6}>
+              <Text type="secondary" style={{ fontSize: 12 }}>Исполнитель</Text>
+              <div>{formatName(sheet.executor?.name)}</div>
             </Col>
             <Col span={6}>
               <Text type="secondary" style={{ fontSize: 12 }}>Дата</Text>
@@ -866,18 +906,79 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
           </Text>
         </div>
 
-        <Divider style={{ margin: '16px 0' }}>📋 Технические места ({technicalPlaces.length})</Divider>
+        {/* Search by dispatch name */}
+        <Input
+          placeholder="Поиск по диспетчерскому наименованию..."
+          prefix={<SearchOutlined />}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          allowClear
+          style={{ marginBottom: 16 }}
+        />
 
-        {/* Technical Places List */}
+        {/* Technical Places List - Grouped by inspection status */}
         <div style={{ maxHeight: '50vh', overflowY: 'auto' }}>
-          {technicalPlaces.map(place => (
-            <TechnicalPlaceCard 
-              key={place.id}
-              place={place} 
-              onClick={handlePlaceClick}
-              isSelected={false}
-            />
-          ))}
+          {/* Group: Not Inspected */}
+          {technicalPlaces
+            .filter(place => 
+              !searchQuery || 
+              (place.dispatchName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+              (place.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+            )
+            .filter(place => !place.isInspected)
+            .length > 0 && (
+              <>
+                <Text strong style={{ display: 'block', marginBottom: 8, color: '#faad14' }}>
+                  ⏺ Не осмотрено ({technicalPlaces.filter(place => !place.isInspected).length})
+                </Text>
+                {technicalPlaces
+                  .filter(place => 
+                    !searchQuery || 
+                    (place.dispatchName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                    (place.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+                  )
+                  .filter(place => !place.isInspected)
+                  .map(place => (
+                    <TechnicalPlaceCard 
+                      key={place.id}
+                      place={place} 
+                      onClick={handlePlaceClick}
+                      isSelected={false}
+                    />
+                  ))}
+              </>
+            )}
+          
+          {/* Group: Inspected */}
+          {technicalPlaces
+            .filter(place => 
+              !searchQuery || 
+              (place.dispatchName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+              (place.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+            )
+            .filter(place => place.isInspected)
+            .length > 0 && (
+              <>
+                <Text strong style={{ display: 'block', marginBottom: 8, marginTop: 16, color: '#52c41a' }}>
+                  ✓ Осмотрено ({technicalPlaces.filter(place => place.isInspected).length})
+                </Text>
+                {technicalPlaces
+                  .filter(place => 
+                    !searchQuery || 
+                    (place.dispatchName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                    (place.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+                  )
+                  .filter(place => place.isInspected)
+                  .map(place => (
+                    <TechnicalPlaceCard 
+                      key={place.id}
+                      place={place} 
+                      onClick={handlePlaceClick}
+                      isSelected={false}
+                    />
+                  ))}
+              </>
+            )}
         </div>
 
         <Button 

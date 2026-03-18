@@ -60,6 +60,7 @@ export const technicalPlaces = [
     objectId: 1,
     type: technicalPlaceTypes.POLE,
     name: 'Опора №1',
+    dispatchName: 'ПС-110кВ Северная - оп.1',
     isInspected: true,
     characteristics: {
       poleNumber: '1',
@@ -83,6 +84,7 @@ export const technicalPlaces = [
     objectId: 1,
     type: technicalPlaceTypes.POLE,
     name: 'Опора №2',
+    dispatchName: 'ПС-110кВ Северная - оп.2',
     isInspected: true,
     characteristics: {
       poleNumber: '2',
@@ -105,6 +107,7 @@ export const technicalPlaces = [
     objectId: 1,
     type: technicalPlaceTypes.SPAN,
     name: 'Пролёт 1-2',
+    dispatchName: 'Пролёт ПС-110кВ Северная 1-2',
     isInspected: true,
     characteristics: {
       spanNumber: '1-2',
@@ -124,6 +127,7 @@ export const technicalPlaces = [
     objectId: 1,
     type: technicalPlaceTypes.POLE,
     name: 'Опора №3',
+    dispatchName: 'ПС-110кВ Северная - оп.3',
     isInspected: false,
     characteristics: {
       poleNumber: '3',
@@ -145,6 +149,7 @@ export const technicalPlaces = [
     objectId: 1,
     type: technicalPlaceTypes.POLE,
     name: 'Опора №4',
+    dispatchName: 'ПС-110кВ Северная - оп.4',
     isInspected: false,
     characteristics: {
       poleNumber: '4',
@@ -165,6 +170,7 @@ export const technicalPlaces = [
     objectId: 2,
     type: technicalPlaceTypes.TRANSFORMER,
     name: 'Трансформатор Т1',
+    dispatchName: 'ПС Центральная - Т1',
     isInspected: false,
     characteristics: {
       transformerNumber: 'Т1',
@@ -188,6 +194,7 @@ export const technicalPlaces = [
     objectId: 2,
     type: technicalPlaceTypes.TRANSFORMER,
     name: 'Трансформатор Т2',
+    dispatchName: 'ПС Центральная - Т2',
     isInspected: false,
     characteristics: {
       transformerNumber: 'Т2',
@@ -208,6 +215,7 @@ export const technicalPlaces = [
     objectId: 2,
     type: technicalPlaceTypes.SWITCHGEAR,
     name: 'Ячейка №1 (ВН)',
+    dispatchName: 'ПС Центральная - Яч.1',
     isInspected: false,
     characteristics: {
       cellNumber: '1',
