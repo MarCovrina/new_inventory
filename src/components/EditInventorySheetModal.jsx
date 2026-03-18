@@ -26,6 +26,7 @@ import {
   ArrowLeftOutlined,
   UploadOutlined,
   EnvironmentOutlined,
+  AimOutlined,
   EditOutlined,
   FormOutlined,
   ToolOutlined,
@@ -272,6 +273,7 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
   const CoordinatePicker = ({ value, onChange }) => {
     const [open, setOpen] = useState(false);
     const [coords, setCoords] = useState(value || null);
+    const [loading, setLoading] = useState(false);
 
     const handleSave = (newCoords) => {
       setCoords(newCoords);
@@ -279,32 +281,91 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
       setOpen(false);
     };
 
+    const handleGPS = () => {
+      if (!navigator.geolocation) {
+        message.error('Геолокация не поддерживается вашим браузером');
+        return;
+      }
+      
+      setLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const newCoords = {
+            lat: position.coords.latitude,
+            lon: position.coords.longitude
+          };
+          setCoords(newCoords);
+          onChange(newCoords);
+          setLoading(false);
+          message.success('Координаты определены по GPS');
+        },
+        (error) => {
+          setLoading(false);
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              message.error('Доступ к геолокации запрещён');
+              break;
+            case error.POSITION_UNAVAILABLE:
+              message.error('Местоположение недоступно');
+              break;
+            case error.TIMEOUT:
+              message.error('Время ожидания определения местоположения истекло');
+              break;
+            default:
+              message.error('Не удалось определить местоположение');
+          }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    };
+
     return (
       <>
-        <Button 
-          type={coords ? 'default' : 'primary'}
-          icon={<EnvironmentOutlined />} 
-          onClick={() => setOpen(true)}
-          size="large"
-          block
-          style={{ height: 48, marginBottom: 8 }}
-        >
-          {coords ? `📍 ${coords.lat.toFixed(5)}, ${coords.lon.toFixed(5)}` : '📍 Выбрать на карте'}
-        </Button>
-        {coords && (
-          <Button 
-            type="text" 
-            danger
-            icon={<DeleteOutlined />} 
-            onClick={() => {
-              setCoords(null);
-              onChange(null);
-            }}
-            size="small"
-          >
-            Очистить
-          </Button>
-        )}
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Button.Group style={{ width: '100%' }}>
+            <Button 
+              icon={<AimOutlined />} 
+              onClick={handleGPS}
+              loading={loading}
+              style={{ flex: 1, height: 40 }}
+            >
+              Определить по GPS
+            </Button>
+            <Button 
+              icon={<EnvironmentOutlined />} 
+              onClick={() => setOpen(true)}
+              style={{ flex: 1, height: 40 }}
+            >
+              Выбрать на карте
+            </Button>
+          </Button.Group>
+          {coords && (
+            <div style={{ 
+              background: '#f6ffed', 
+              padding: '8px 12px', 
+              borderRadius: 6,
+              border: '1px solid #b7eb8f',
+              marginTop: 8
+            }}>
+              <Text type="success">
+                <EnvironmentOutlined /> Широта: {coords.lat.toFixed(6)}, Долгота: {coords.lon.toFixed(6)}
+              </Text>
+              <Button 
+                type="text" 
+                danger
+                icon={<DeleteOutlined />} 
+                onClick={() => {
+                  setCoords(null);
+                  onChange(null);
+                }}
+                size="small"
+                style={{ float: 'right' }}
+              >
+                Очистить
+              </Button>
+            </div>
+          )}
+        </Space>
         <CoordinatePickerModal
           open={open}
           value={coords}
