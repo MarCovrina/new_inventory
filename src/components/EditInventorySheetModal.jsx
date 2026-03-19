@@ -37,7 +37,8 @@ import {
   CameraOutlined,
   MessageOutlined,
   SearchOutlined,
-  AppstoreAddOutlined
+  AppstoreAddOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
 import { getTechnicalPlacesByObjectId, technicalPlaceCharacteristics, technicalPlaceTypes, allowedTechnicalPlaceTypesByObjectType, equipmentSets, inventorySheetStatuses } from '../data/mockData';
 
@@ -137,12 +138,21 @@ const CoordinatePickerModal = ({ open, value, onSave, onCancel }) => {
   );
 };
 
-const TechnicalPlaceCard = ({ place, onClick, isSelected, disabled }) => {
+const TechnicalPlaceCard = ({ place, onClick, isSelected, disabled, onDelete, onRestore }) => {
   const statusIcon = place.isInspected 
     ? <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 18 }} /> 
     : <ClockCircleOutlined style={{ color: '#bfbfbf', fontSize: 18 }} />;
 
   const borderLeftColor = place.isInspected ? '#52c41a' : '#bfbfbf';
+
+  const handleActionClick = (e) => {
+    e.stopPropagation();
+    if (place.isDeleted) {
+      onRestore(place.id);
+    } else {
+      onDelete(place.id);
+    }
+  };
 
   return (
     <Card
@@ -154,17 +164,44 @@ const TechnicalPlaceCard = ({ place, onClick, isSelected, disabled }) => {
         backgroundColor: place.isInspected ? '#f6ffed' : '#fafafa',
         borderRadius: 12,
         marginBottom: 12,
-        opacity: disabled ? 0.6 : 1,
-        cursor: disabled ? 'not-allowed' : 'pointer'
+        opacity: disabled || place.isDeleted ? 0.6 : 1,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        position: 'relative'
       }}
       styles={{ body: { padding: 16 } }}
     >
+      {place.isDeleted && (
+        <Tag color="error" style={{ position: 'absolute', top: 8, right: 8 }}>
+          Удалено
+        </Tag>
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ flex: 1 }}>
           <Text strong style={{ fontSize: 16, display: 'block' }}>{place.name}</Text>
-          <Tag color="blue" style={{ marginTop: 4 }}>{place.type}</Tag>
+          <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+            <Tag color="blue">{place.type}</Tag>
+            {place.isDeleted && <Tag color="error">Удалено</Tag>}
+          </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 100, justifyContent: 'flex-end' }}>
+          {!place.isDeleted && (
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={handleActionClick}
+              size="small"
+            />
+          )}
+          {place.isDeleted && (
+            <Button
+              type="text"
+              icon={<ReloadOutlined />}
+              onClick={handleActionClick}
+              size="small"
+              style={{ color: '#52c41a' }}
+            />
+          )}
           {statusIcon}
           <Text style={{ fontSize: 13 }} type={place.isInspected ? 'success' : 'warning'}>
             {place.isInspected ? 'Осмотрено' : 'Не осмотрено'}
@@ -537,6 +574,7 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
                     form={form}
                     layout="vertical"
                     onValuesChange={handleValuesChange}
+                    disabled={place.isDeleted}
                   >
                     {/* Name and Dispatch Name Fields */}
                     <Row gutter={[12, 0]}>
@@ -892,23 +930,51 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
         <Button onClick={onClose} size="large">
           Назад к списку
         </Button>
-        <Button
-          type={isInspected ? 'default' : 'primary'}
-          icon={isInspected ? <CloseCircleOutlined /> : <CheckCircleOutlined />}
-          onClick={handleToggleInspected}
-          size="large"
-          style={isInspected ? { borderColor: '#ff4d4f', color: '#ff4d4f' } : { background: '#52c41a', borderColor: '#52c41a' }}
-        >
-          {isInspected ? 'Не осмотрено' : 'Осмотрено'}
-        </Button>
-        <Button 
-          type="primary" 
-          icon={<CheckCircleOutlined />} 
-          onClick={handleSave}
-          size="large"
-        >
-          Сохранить
-        </Button>
+        {!place.isDeleted && (
+          <>
+            <Button
+              type={isInspected ? 'default' : 'primary'}
+              icon={isInspected ? <CloseCircleOutlined /> : <CheckCircleOutlined />}
+              onClick={handleToggleInspected}
+              size="large"
+              style={isInspected ? { borderColor: '#ff4d4f', color: '#ff4d4f' } : { background: '#52c41a', borderColor: '#52c41a' }}
+            >
+              {isInspected ? 'Не осмотрено' : 'Осмотрено'}
+            </Button>
+            <Button 
+              type="primary" 
+              icon={<CheckCircleOutlined />} 
+              onClick={handleSave}
+              size="large"
+            >
+              Сохранить
+            </Button>
+          </>
+        )}
+        {place.isDeleted && (
+          <Button
+            type="primary"
+            icon={<ReloadOutlined />}
+            onClick={() => {
+              const values = form.getFieldsValue();
+              onSave({
+                ...place,
+                name: values.name || place.name,
+                dispatchName: values.dispatchName || '',
+                characteristics: values,
+                comment: values.comment,
+                photos: photos,
+                equipment: equipment,
+                isInspected: isInspected,
+                isDeleted: false
+              });
+              message.success('Техническое место восстановлено');
+            }}
+            size="large"
+          >
+            Восстановить
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -956,6 +1022,20 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
     setSelectedPlace(null);
   };
 
+  const handleDeletePlace = (placeId) => {
+    setTechnicalPlaces(prev => 
+      prev.map(p => p.id === placeId ? { ...p, isDeleted: true } : p)
+    );
+    message.success('Техническое место помечено как удаленное');
+  };
+
+  const handleRestorePlace = (placeId) => {
+    setTechnicalPlaces(prev => 
+      prev.map(p => p.id === placeId ? { ...p, isDeleted: false } : p)
+    );
+    message.success('Техническое место восстановлено');
+  };
+
   const handleAddPlace = () => {
     setIsAddPlaceModalOpen(true);
   };
@@ -968,6 +1048,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
       name: `Новое тех. место`,
       dispatchName: '',
       isInspected: false,
+      isDeleted: false,
       characteristics: {},
       comment: '',
       photos: [],
@@ -1142,7 +1223,9 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
                           place={place} 
                           onClick={handlePlaceClick}
                           isSelected={false}
-                          disabled={sheet.status === inventorySheetStatuses.DRAFT}
+                          disabled={sheet.status === inventorySheetStatuses.DRAFT && !place.isDeleted}
+                          onDelete={handleDeletePlace}
+                          onRestore={handleRestorePlace}
                         />
                       ))}
                   </>
@@ -1171,7 +1254,9 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
                           place={place} 
                           onClick={handlePlaceClick}
                           isSelected={false}
-                          disabled={sheet.status === inventorySheetStatuses.DRAFT}
+                          disabled={sheet.status === inventorySheetStatuses.DRAFT && !place.isDeleted}
+                          onDelete={handleDeletePlace}
+                          onRestore={handleRestorePlace}
                         />
                       ))}
                   </>
