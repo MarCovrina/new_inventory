@@ -38,7 +38,9 @@ import {
   MessageOutlined,
   SearchOutlined,
   AppstoreAddOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  EyeOutlined,
+  EyeInvisibleOutlined
 } from '@ant-design/icons';
 import { getTechnicalPlacesByObjectId, technicalPlaceCharacteristics, technicalPlaceTypes, allowedTechnicalPlaceTypesByObjectType, equipmentSets, inventorySheetStatuses } from '../data/mockData';
 
@@ -138,7 +140,7 @@ const CoordinatePickerModal = ({ open, value, onSave, onCancel }) => {
   );
 };
 
-const TechnicalPlaceCard = ({ place, onClick, isSelected, disabled, onDelete, onRestore }) => {
+const TechnicalPlaceCard = ({ place, onClick, isSelected, disabled, onDelete, onRestore, canModify }) => {
   const statusIcon = place.isInspected 
     ? <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 18 }} /> 
     : <ClockCircleOutlined style={{ color: '#bfbfbf', fontSize: 18 }} />;
@@ -184,28 +186,7 @@ const TechnicalPlaceCard = ({ place, onClick, isSelected, disabled, onDelete, on
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 100, justifyContent: 'flex-end' }}>
-          {!place.isDeleted && (
-            <Button
-              type="text"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={handleActionClick}
-              size="small"
-            />
-          )}
-          {place.isDeleted && (
-            <Button
-              type="text"
-              icon={<ReloadOutlined />}
-              onClick={handleActionClick}
-              size="small"
-              style={{ color: '#52c41a' }}
-            />
-          )}
           {statusIcon}
-          <Text style={{ fontSize: 13 }} type={place.isInspected ? 'success' : 'warning'}>
-            {place.isInspected ? 'Осмотрено' : 'Не осмотрено'}
-          </Text>
         </div>
       </div>
       {place.comment && (
@@ -213,6 +194,32 @@ const TechnicalPlaceCard = ({ place, onClick, isSelected, disabled, onDelete, on
           <Text type="secondary" ellipsis style={{ fontSize: 12 }}>
             💬 {place.comment}
           </Text>
+        </div>
+      )}
+      {canModify && (
+        <div style={{ position: 'absolute', bottom: 12, right: 12 }}>
+          {!place.isDeleted && (
+            <Button
+              type="primary"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={handleActionClick}
+              size="large"
+            >
+              Удалить
+            </Button>
+          )}
+          {place.isDeleted && (
+            <Button
+              type="primary"
+              icon={<ReloadOutlined />}
+              onClick={handleActionClick}
+              size="large"
+              style={{ background: '#52c41a', borderColor: '#52c41a' }}
+            >
+              Восстановить
+            </Button>
+          )}
         </div>
       )}
     </Card>
@@ -986,6 +993,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('all');
   const [isAddPlaceModalOpen, setIsAddPlaceModalOpen] = useState(false);
+  const [showDeletedPlaces, setShowDeletedPlaces] = useState(true);
 
   // Helper function to format name: LastName Initials (on one line)
   const formatName = (fullName) => {
@@ -1057,6 +1065,17 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
     setTechnicalPlaces(prev => [...prev, newPlace]);
     setIsAddPlaceModalOpen(false);
     setSelectedPlace(newPlace);
+  };
+
+  const filterPlaces = (places) => {
+    return places
+      .filter(place => 
+        !searchQuery || 
+        (place.dispatchName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (place.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+      .filter(place => selectedType === 'all' || place.type === selectedType)
+      .filter(place => showDeletedPlaces || !place.isDeleted);
   };
 
   const getAvailablePlaceTypes = () => {
@@ -1171,27 +1190,39 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
         />
 
         {/* Filter by technical place type */}
-        <div style={{ marginBottom: 16 }}>
-          <Text strong style={{ marginRight: 12 }}>Тип:</Text>
-          <Space wrap>
-            <Button 
-              type={selectedType === 'all' ? 'primary' : 'default'}
-              onClick={() => setSelectedType('all')}
-              size="small"
-            >
-              Все ({technicalPlaces.length})
-            </Button>
-            {[...new Set(technicalPlaces.map(p => p.type))].map(type => (
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8 }}>
+          <div>
+            <Text strong style={{ marginRight: 12 }}>Тип:</Text>
+            <Space wrap>
               <Button 
-                key={type}
-                type={selectedType === type ? 'primary' : 'default'}
-                onClick={() => setSelectedType(type)}
+                type={selectedType === 'all' ? 'primary' : 'default'}
+                onClick={() => setSelectedType('all')}
                 size="small"
               >
-                {type} ({technicalPlaces.filter(p => p.type === type).length})
+                Все ({filterPlaces(technicalPlaces).length})
               </Button>
-            ))}
-          </Space>
+              {[...new Set(technicalPlaces.map(p => p.type))].map(type => (
+                <Button 
+                  key={type}
+                  type={selectedType === type ? 'primary' : 'default'}
+                  onClick={() => setSelectedType(type)}
+                  size="small"
+                >
+                  {type} ({filterPlaces(technicalPlaces.filter(p => p.type === type)).length})
+                </Button>
+              ))}
+            </Space>
+          </div>
+          <div>
+            <Button
+              type={showDeletedPlaces ? 'primary' : 'default'}
+              onClick={() => setShowDeletedPlaces(!showDeletedPlaces)}
+              size="small"
+              icon={showDeletedPlaces ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+            >
+              {showDeletedPlaces ? 'Скрыть удаленные' : 'Показать удаленные'}
+            </Button>
+          </div>
         </div>
 
         {/* Technical Places List - Grouped by inspection status with Collapse */}
@@ -1204,19 +1235,12 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
                 key: 'notInspected',
                 label: (
                   <Text style={{ color: '#8c8c8c', fontSize: 14, textTransform: 'uppercase' }}>
-                    Не осмотрено ({technicalPlaces.filter(place => !place.isInspected).length})
+                    Не осмотрено ({filterPlaces(technicalPlaces.filter(place => !place.isInspected)).length})
                   </Text>
                 ),
                 children: (
                   <>
-                    {technicalPlaces
-                      .filter(place => 
-                        !searchQuery || 
-                        (place.dispatchName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                        (place.name?.toLowerCase().includes(searchQuery.toLowerCase()))
-                      )
-                      .filter(place => selectedType === 'all' || place.type === selectedType)
-                      .filter(place => !place.isInspected)
+                    {filterPlaces(technicalPlaces.filter(place => !place.isInspected))
                       .map(place => (
                         <TechnicalPlaceCard 
                           key={place.id}
@@ -1226,6 +1250,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
                           disabled={sheet.status === inventorySheetStatuses.DRAFT && !place.isDeleted}
                           onDelete={handleDeletePlace}
                           onRestore={handleRestorePlace}
+                          canModify={sheet.status === inventorySheetStatuses.IN_WORK}
                         />
                       ))}
                   </>
@@ -1235,19 +1260,12 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
                 key: 'inspected',
                 label: (
                   <Text style={{ color: '#8c8c8c', fontSize: 14, textTransform: 'uppercase' }}>
-                    Осмотрено ({technicalPlaces.filter(place => place.isInspected).length})
+                    Осмотрено ({filterPlaces(technicalPlaces.filter(place => place.isInspected)).length})
                   </Text>
                 ),
                 children: (
                   <>
-                    {technicalPlaces
-                      .filter(place => 
-                        !searchQuery || 
-                        (place.dispatchName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                        (place.name?.toLowerCase().includes(searchQuery.toLowerCase()))
-                      )
-                      .filter(place => selectedType === 'all' || place.type === selectedType)
-                      .filter(place => place.isInspected)
+                    {filterPlaces(technicalPlaces.filter(place => place.isInspected))
                       .map(place => (
                         <TechnicalPlaceCard 
                           key={place.id}
@@ -1257,6 +1275,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
                           disabled={sheet.status === inventorySheetStatuses.DRAFT && !place.isDeleted}
                           onDelete={handleDeletePlace}
                           onRestore={handleRestorePlace}
+                          canModify={sheet.status === inventorySheetStatuses.IN_WORK}
                         />
                       ))}
                   </>
