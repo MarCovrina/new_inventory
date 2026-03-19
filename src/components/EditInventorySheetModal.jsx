@@ -26,6 +26,7 @@ import {
   DeleteOutlined, 
   CheckCircleOutlined, 
   ClockCircleOutlined,
+  CloseCircleOutlined,
   ArrowLeftOutlined,
   UploadOutlined,
   EnvironmentOutlined,
@@ -185,6 +186,7 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
   const [form] = Form.useForm();
   const [characteristics, setCharacteristics] = useState(place.characteristics || {});
   const [photos, setPhotos] = useState(place.photos || []);
+  const [isInspected, setIsInspected] = useState(place.isInspected || false);
   
   const charDefinitions = technicalPlaceCharacteristics[place.type] || [];
 
@@ -197,10 +199,28 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
     });
     setPhotos(place.photos || []);
     setEquipment(place.equipment || []);
+    setIsInspected(place.isInspected || false);
   }, [place, form]);
 
   const handleValuesChange = (changedValues, allValues) => {
     setCharacteristics(allValues);
+  };
+
+  const handleToggleInspected = () => {
+    const newInspected = !isInspected;
+    setIsInspected(newInspected);
+    const values = form.getFieldsValue();
+    onSave({
+      ...place,
+      name: values.name || place.name,
+      dispatchName: values.dispatchName || '',
+      characteristics: values,
+      comment: values.comment,
+      photos: photos,
+      equipment: equipment,
+      isInspected: newInspected
+    });
+    message.success(newInspected ? 'Техническое место отмечено как осмотренное' : 'Техническое место отмечено как не осмотренное');
   };
 
   const handleSave = () => {
@@ -213,7 +233,7 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
       comment: values.comment,
       photos: photos,
       equipment: equipment,
-      isInspected: true
+      isInspected: isInspected
     });
     message.success('Изменения сохранены');
   };
@@ -871,6 +891,15 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
       }}>
         <Button onClick={onClose} size="large">
           Назад к списку
+        </Button>
+        <Button
+          type={isInspected ? 'default' : 'primary'}
+          icon={isInspected ? <CloseCircleOutlined /> : <CheckCircleOutlined />}
+          onClick={handleToggleInspected}
+          size="large"
+          style={isInspected ? { borderColor: '#ff4d4f', color: '#ff4d4f' } : { background: '#52c41a', borderColor: '#52c41a' }}
+        >
+          {isInspected ? 'Не осмотрено' : 'Осмотрено'}
         </Button>
         <Button 
           type="primary" 
