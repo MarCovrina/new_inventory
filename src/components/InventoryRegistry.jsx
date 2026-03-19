@@ -113,6 +113,7 @@ const InventoryRegistry = () => {
           <Button 
             type="text" 
             icon={<EditOutlined />} 
+            disabled={record.status === inventorySheetStatuses.SUBMITTED || record.status === inventorySheetStatuses.APPROVED}
             onClick={() => {
               setSelectedSheet(record);
               setIsEditModalOpen(true);
@@ -234,6 +235,7 @@ const InventoryRegistry = () => {
           setSheets(prev => prev.map(s => 
             s.id === updatedSheet.id ? { ...s, ...updatedSheet } : s
           ));
+          setSelectedSheet(updatedSheet);
         }}
       />
     </div>
