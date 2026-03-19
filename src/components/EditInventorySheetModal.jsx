@@ -35,9 +35,10 @@ import {
   ToolOutlined,
   CameraOutlined,
   MessageOutlined,
-  SearchOutlined
+  SearchOutlined,
+  AppstoreAddOutlined
 } from '@ant-design/icons';
-import { getTechnicalPlacesByObjectId, technicalPlaceCharacteristics, technicalPlaceTypes } from '../data/mockData';
+import { getTechnicalPlacesByObjectId, technicalPlaceCharacteristics, technicalPlaceTypes, allowedTechnicalPlaceTypesByObjectType, equipmentSets, inventorySheetStatuses } from '../data/mockData';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -135,7 +136,7 @@ const CoordinatePickerModal = ({ open, value, onSave, onCancel }) => {
   );
 };
 
-const TechnicalPlaceCard = ({ place, onClick, isSelected }) => {
+const TechnicalPlaceCard = ({ place, onClick, isSelected, disabled }) => {
   const statusIcon = place.isInspected 
     ? <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 18 }} /> 
     : <ClockCircleOutlined style={{ color: '#bfbfbf', fontSize: 18 }} />;
@@ -144,14 +145,16 @@ const TechnicalPlaceCard = ({ place, onClick, isSelected }) => {
 
   return (
     <Card
-      hoverable
-      onClick={() => onClick(place)}
+      hoverable={!disabled}
+      onClick={() => !disabled && onClick(place)}
       style={{ 
         borderColor: isSelected ? '#1890ff' : '#d9d9d9',
         borderLeft: `4px solid ${borderLeftColor}`,
         backgroundColor: place.isInspected ? '#f6ffed' : '#fafafa',
         borderRadius: 12,
-        marginBottom: 12
+        marginBottom: 12,
+        opacity: disabled ? 0.6 : 1,
+        cursor: disabled ? 'not-allowed' : 'pointer'
       }}
       styles={{ body: { padding: 16 } }}
     >
@@ -231,6 +234,8 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
   const [equipment, setEquipment] = useState([]);
   const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1, unit: 'шт' });
   const [quantityEditModal, setQuantityEditModal] = useState({ open: false, item: null, value: 1 });
+  const [addItemModalOpen, setAddItemModalOpen] = useState(false);
+  const [addSetModalOpen, setAddSetModalOpen] = useState(false);
 
   const handleAddEquipment = () => {
     if (!newEquipment.name.trim()) {
@@ -247,6 +252,24 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
     };
     setEquipment([...equipment, newItem]);
     setNewEquipment({ name: '', quantity: 1, unit: 'шт' });
+  };
+
+  const handleAddEquipmentFromSet = (set) => {
+    const newItems = set.materials.map(mat => ({
+      id: Date.now() + Math.random(),
+      name: mat.name,
+      quantity: mat.quantity,
+      unit: mat.unit,
+      markedForDeletion: false,
+      isNew: true
+    }));
+    setEquipment([...equipment, ...newItems]);
+    setAddSetModalOpen(false);
+    message.success(`Добавлен набор: ${set.name}`);
+  };
+
+  const getAvailableEquipmentSets = () => {
+    return equipmentSets.filter(set => set.technicalPlaceType === place.type);
   };
 
   const handleToggleDelete = (id) => {
@@ -534,7 +557,7 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
               label: (
                 <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                   <ToolOutlined style={{ fontSize: 20 }} />
-                  <span style={{ fontSize: 10 }}>Оборудование</span>
+                   <span style={{ fontSize: 10 }}>Оборудование и материалы</span>
                 </span>
               ),
               children: (
@@ -606,50 +629,31 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
                     )}
                   </div>
 
-                  {/* Add Equipment Form */}
+                  {/* Add Equipment Buttons */}
                   <div style={{ 
                     background: '#f5f5f5', 
                     padding: 12, 
                     borderRadius: 8,
-                    marginBottom: 16 
+                    marginBottom: 16,
+                    display: 'flex',
+                    gap: 12
                   }}>
-                    <Text strong style={{ display: 'block', marginBottom: 8 }}>Добавить оборудование/материал</Text>
-                    <Space direction="vertical" style={{ width: '100%' }}>
-                      <Input 
-                        placeholder="Название (например: Изолятор ПС-120)"
-                        value={newEquipment.name}
-                        onChange={e => setNewEquipment({ ...newEquipment, name: e.target.value })}
-                        size="large"
-                      />
-                      <Space>
-                        <InputNumber
-                          min={1}
-                          value={newEquipment.quantity}
-                          onChange={v => setNewEquipment({ ...newEquipment, quantity: v || 1 })}
-                          size="large"
-                          style={{ width: 80 }}
-                        />
-                        <Select
-                          value={newEquipment.unit}
-                          onChange={v => setNewEquipment({ ...newEquipment, unit: v })}
-                          size="large"
-                          style={{ width: 100 }}
-                        >
-                          <Select.Option value="шт">шт</Select.Option>
-                          <Select.Option value="м">м</Select.Option>
-                          <Select.Option value="кг">кг</Select.Option>
-                          <Select.Option value="компл">компл</Select.Option>
-                        </Select>
-                        <Button 
-                          type="primary" 
-                          icon={<PlusOutlined />}
-                          onClick={handleAddEquipment}
-                          size="large"
-                        >
-                          Добавить
-                        </Button>
-                      </Space>
-                    </Space>
+                    <Button
+                      type="default"
+                      icon={<ToolOutlined />}
+                      onClick={() => setAddItemModalOpen(true)}
+                      size="large"
+                    >
+                      Добавить поштучно
+                    </Button>
+                    <Button
+                      type="default"
+                      icon={<AppstoreAddOutlined />}
+                      onClick={() => setAddSetModalOpen(true)}
+                      size="large"
+                    >
+                      Добавить набор
+                    </Button>
                   </div>
                 </>
               )
@@ -747,6 +751,117 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
           </div>
         </Modal>
 
+      {/* Add Item Modal (for individual equipment/material) */}
+      <Modal
+        title="Добавить оборудование/материал"
+        open={addItemModalOpen}
+        onCancel={() => {
+          setAddItemModalOpen(false);
+          setNewEquipment({ name: '', quantity: 1, unit: 'шт' });
+        }}
+        footer={[
+          <Button key="cancel" onClick={() => {
+            setAddItemModalOpen(false);
+            setNewEquipment({ name: '', quantity: 1, unit: 'шт' });
+          }}>
+            Отмена
+          </Button>,
+          <Button key="add" type="primary" icon={<PlusOutlined />} onClick={() => {
+            handleAddEquipment();
+            setAddItemModalOpen(false);
+          }}>
+            Добавить
+          </Button>
+        ]}
+      >
+        <div style={{ padding: '16px 0' }}>
+          <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+            Введите название, количество и единицу измерения для нового оборудования или материала
+          </Text>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Input 
+              placeholder="Название (например: Изолятор ПС-120)"
+              value={newEquipment.name}
+              onChange={e => setNewEquipment({ ...newEquipment, name: e.target.value })}
+              size="large"
+            />
+            <Space>
+              <Text>Кол-во:</Text>
+              <InputNumber
+                min={1}
+                value={newEquipment.quantity}
+                onChange={v => setNewEquipment({ ...newEquipment, quantity: v || 1 })}
+                size="large"
+                style={{ width: 80 }}
+              />
+              <Text>Ед. изм.:</Text>
+              <Select
+                value={newEquipment.unit}
+                onChange={v => setNewEquipment({ ...newEquipment, unit: v })}
+                size="large"
+                style={{ width: 100 }}
+              >
+                <Select.Option value="шт">шт</Select.Option>
+                <Select.Option value="м">м</Select.Option>
+                <Select.Option value="кг">кг</Select.Option>
+                <Select.Option value="компл">компл</Select.Option>
+              </Select>
+            </Space>
+          </Space>
+        </div>
+      </Modal>
+
+      {/* Add Set Modal (for equipment sets) */}
+      <Modal
+        title="Выберите набор оборудования и материалов"
+        open={addSetModalOpen}
+        onCancel={() => setAddSetModalOpen(false)}
+        footer={null}
+        width={600}
+      >
+        <div style={{ padding: '16px 0' }}>
+          <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+            Выберите набор из списка. Все материалы и оборудование из набора будут добавлены к техническому месту.
+          </Text>
+          {getAvailableEquipmentSets().length === 0 ? (
+            <Text type="warning">Нет доступных наборов для данного типа технического места</Text>
+          ) : (
+            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+              {getAvailableEquipmentSets().map(set => (
+                <Card
+                  key={set.id}
+                  size="small"
+                  style={{ marginBottom: 12, cursor: 'pointer' }}
+                  onClick={() => handleAddEquipmentFromSet(set)}
+                  hoverable
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
+                      <Text strong style={{ fontSize: 14 }}>{set.name}</Text>
+                      <div style={{ marginTop: 8 }}>
+                        {set.materials.slice(0, 3).map((mat, idx) => (
+                          <Text key={idx} type="secondary" style={{ display: 'block', fontSize: 12 }}>
+                            • {mat.name} ({mat.quantity} {mat.unit})
+                          </Text>
+                        ))}
+                        {set.materials.length > 3 && (
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            ... и ещё {set.materials.length - 3} поз.
+                          </Text>
+                        )}
+                      </div>
+                    </div>
+                    <Button type="link" icon={<PlusOutlined />}>
+                      Добавить
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </Modal>
+
       {/* Sticky Footer with Action Buttons */}
       <div style={{ 
         display: 'flex', 
@@ -775,6 +890,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
   const [technicalPlaces, setTechnicalPlaces] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('all');
+  const [isAddPlaceModalOpen, setIsAddPlaceModalOpen] = useState(false);
 
   // Helper function to format name: LastName Initials (on one line)
   const formatName = (fullName) => {
@@ -812,23 +928,54 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
   };
 
   const handleAddPlace = () => {
+    setIsAddPlaceModalOpen(true);
+  };
+
+  const handleSelectPlaceType = (type) => {
     const newPlace = {
       id: Date.now(),
       objectId: sheet.object.id,
-      type: Object.keys(technicalPlaceCharacteristics)[0] || 'Опора',
+      type: type,
       name: `Новое тех. место`,
       dispatchName: '',
       isInspected: false,
       characteristics: {},
       comment: '',
-      photos: []
+      photos: [],
+      equipment: []
     };
     setTechnicalPlaces(prev => [...prev, newPlace]);
+    setIsAddPlaceModalOpen(false);
     setSelectedPlace(newPlace);
+  };
+
+  const getAvailablePlaceTypes = () => {
+    if (!sheet?.object?.type) return Object.values(technicalPlaceTypes);
+    return allowedTechnicalPlaceTypesByObjectType[sheet.object.type] || Object.values(technicalPlaceTypes);
   };
 
   const handleBackToList = () => {
     setSelectedPlace(null);
+  };
+
+  const handleCompleteInspection = () => {
+    const updatedSheet = {
+      ...sheet,
+      status: inventorySheetStatuses.SUBMITTED,
+      submittedAt: new Date().toISOString().split('T')[0]
+    };
+    onSave(updatedSheet);
+    onClose();
+    message.success('Осмотр завершен. Лист сдан на проверку.');
+  };
+
+  const handleAcceptWork = () => {
+    const updatedSheet = {
+      ...sheet,
+      status: inventorySheetStatuses.IN_WORK
+    };
+    onSave(updatedSheet);
+    message.success('Лист инвентаризации принят в работу.');
   };
 
   if (!sheet) return null;
@@ -940,7 +1087,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
         {/* Technical Places List - Grouped by inspection status with Collapse */}
         <div style={{ maxHeight: '50vh', overflowY: 'auto' }}>
           <Collapse 
-            defaultActiveKey={['notInspected', 'inspected']} 
+            defaultActiveKey={sheet.status === inventorySheetStatuses.DRAFT ? [] : ['notInspected', 'inspected']} 
             ghost
             items={[
               {
@@ -966,6 +1113,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
                           place={place} 
                           onClick={handlePlaceClick}
                           isSelected={false}
+                          disabled={sheet.status === inventorySheetStatuses.DRAFT}
                         />
                       ))}
                   </>
@@ -994,6 +1142,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
                           place={place} 
                           onClick={handlePlaceClick}
                           isSelected={false}
+                          disabled={sheet.status === inventorySheetStatuses.DRAFT}
                         />
                       ))}
                   </>
@@ -1009,6 +1158,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
           onClick={handleAddPlace}
           size="large"
           block
+          disabled={sheet.status === inventorySheetStatuses.DRAFT}
           style={{ marginTop: 16, height: 48 }}
         >
           Добавить тех. место
@@ -1018,21 +1168,60 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
   };
 
   return (
-    <Modal
-      title={null}
-      open={open}
-      onCancel={onClose}
-      width="95%"
-      style={{ maxWidth: 600 }}
-      closable={true}
-      footer={selectedPlace ? null : [
-        <Button key="close" onClick={onClose} size="large">
-          Закрыть
-        </Button>
-      ]}
-    >
-      {renderContent()}
-    </Modal>
+    <>
+      <Modal
+        title={null}
+        open={open}
+        onCancel={onClose}
+        width="95%"
+        style={{ maxWidth: 600 }}
+        closable={true}
+        footer={selectedPlace ? null : [
+          sheet.status === inventorySheetStatuses.DRAFT && (
+            <Button key="accept" type="primary" icon={<CheckCircleOutlined />} onClick={handleAcceptWork} size="large" style={{ background: '#1890ff', borderColor: '#1890ff' }}>
+              Принять в работу
+            </Button>
+          ),
+          sheet.status === inventorySheetStatuses.IN_WORK && (
+            <Button key="complete" type="primary" icon={<CheckCircleOutlined />} onClick={handleCompleteInspection} size="large" style={{ background: '#52c41a', borderColor: '#52c41a' }}>
+              Завершить осмотр
+            </Button>
+          ),
+          <Button key="close" onClick={onClose} size="large">
+            Закрыть
+          </Button>
+        ]}
+      >
+        {renderContent()}
+      </Modal>
+
+      {/* Modal for selecting technical place type */}
+      <Modal
+        title="Выберите тип технического места"
+        open={isAddPlaceModalOpen}
+        onCancel={() => setIsAddPlaceModalOpen(false)}
+        width="95%"
+        style={{ maxWidth: 500 }}
+        footer={null}
+      >
+        <div style={{ padding: '8px 0' }}>
+          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            {getAvailablePlaceTypes().map(type => (
+              <Button
+                key={type}
+                type="primary"
+                size="large"
+                block
+                onClick={() => handleSelectPlaceType(type)}
+                style={{ height: 50, fontSize: 16 }}
+              >
+                {type}
+              </Button>
+            ))}
+          </Space>
+        </div>
+      </Modal>
+    </>
   );
 };
 
