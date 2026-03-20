@@ -11,7 +11,7 @@ import {
   Card,
   message 
 } from 'antd';
-import { PlusOutlined, EyeOutlined, EditOutlined } from '@ant-design/icons';
+import { PlusOutlined, EyeOutlined, EditOutlined, CarryOutOutlined } from '@ant-design/icons';
 import { inventorySheets, inventoryObjects, users, inventorySheetStatuses } from '../data/mockData';
 import EditInventorySheetModal from './EditInventorySheetModal';
 
@@ -110,15 +110,22 @@ const InventoryRegistry = () => {
             icon={<EyeOutlined />} 
             onClick={() => message.info(`Просмотр листа ${record.number}`)}
           />
-          <Button 
-            type="text" 
-            icon={<EditOutlined />} 
-            disabled={record.status === inventorySheetStatuses.SUBMITTED || record.status === inventorySheetStatuses.APPROVED}
-            onClick={() => {
-              setSelectedSheet(record);
-              setIsEditModalOpen(true);
-            }}
-          />
+          {record.status === inventorySheetStatuses.SUBMITTED ? (
+            <Button 
+              type="text" 
+              icon={<CarryOutOutlined />}
+            />
+          ) : (
+            <Button 
+              type="text" 
+              icon={<EditOutlined />} 
+              disabled={record.status === inventorySheetStatuses.APPROVED}
+              onClick={() => {
+                setSelectedSheet(record);
+                setIsEditModalOpen(true);
+              }}
+            />
+          )}
         </Space>
       ),
     },
