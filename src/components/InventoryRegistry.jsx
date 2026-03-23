@@ -14,6 +14,7 @@ import {
 import { PlusOutlined, EyeOutlined, EditOutlined, CarryOutOutlined } from '@ant-design/icons';
 import { inventorySheets, inventoryObjects, users, inventorySheetStatuses } from '../data/mockData';
 import EditInventorySheetModal from './EditInventorySheetModal';
+import ReviewInventorySheetModal from './ReviewInventorySheetModal';
 
 const { Title, Text } = Typography;
 
@@ -28,6 +29,7 @@ const statusColors = {
 const InventoryRegistry = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedSheet, setSelectedSheet] = useState(null);
   const [form] = Form.useForm();
   const [sheets, setSheets] = useState(inventorySheets);
@@ -114,6 +116,10 @@ const InventoryRegistry = () => {
             <Button 
               type="text" 
               icon={<CarryOutOutlined />}
+              onClick={() => {
+                setSelectedSheet(record);
+                setIsReviewModalOpen(true);
+              }}
             />
           ) : (
             <Button 
@@ -243,6 +249,25 @@ const InventoryRegistry = () => {
             s.id === updatedSheet.id ? { ...s, ...updatedSheet } : s
           ));
           setSelectedSheet(updatedSheet);
+        }}
+      />
+
+      <ReviewInventorySheetModal
+        open={isReviewModalOpen}
+        sheet={selectedSheet}
+        onClose={() => {
+          setIsReviewModalOpen(false);
+          setSelectedSheet(null);
+        }}
+        onApprove={(sheet) => {
+          message.success(`Лист ${sheet.number} утверждён`);
+          setIsReviewModalOpen(false);
+          setSelectedSheet(null);
+        }}
+        onReturn={(sheet) => {
+          message.info(`Лист ${sheet.number} возвращён на доработку`);
+          setIsReviewModalOpen(false);
+          setSelectedSheet(null);
         }}
       />
     </div>
