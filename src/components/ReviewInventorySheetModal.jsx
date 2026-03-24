@@ -178,18 +178,11 @@ const ReviewInventorySheetModal = ({ open, sheet, onClose, onApprove, onReturn }
   const progressPercent = totalCount > 0 ? Math.round((inspectedCount / totalCount) * 100) : 0;
 
   const getPlaceStatusIcon = (place) => {
-    if (place.isVerified) {
-      return <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 16 }} />;
-    }
-    if (place.isInspected) {
-      return <CheckCircleOutlined style={{ color: '#1890ff', fontSize: 16 }} />;
-    }
     return <ClockCircleOutlined style={{ color: '#bfbfbf', fontSize: 16 }} />;
   };
 
   const getPlaceStatusColor = (place) => {
     if (place.isVerified) return '#52c41a';
-    if (place.isInspected) return '#1890ff';
     return '#bfbfbf';
   };
 
@@ -437,17 +430,14 @@ const ReviewInventorySheetModal = ({ open, sheet, onClose, onApprove, onReturn }
                   }}
                   bodyStyle={{ padding: 12, paddingRight: place.isVerified ? 36 : 12 }}
                 >
-                  <Space>
-                    {getPlaceStatusIcon(place)}
-                    <div>
-                      <Text strong style={{ display: 'block', fontSize: 13 }}>
-                        {place.name}
-                      </Text>
-                      <Text type="secondary" style={{ fontSize: 11 }}>
-                        {technicalPlaceTypes[place.type]}
-                      </Text>
-                    </div>
-                  </Space>
+                  <div>
+                    <Text strong style={{ display: 'block', fontSize: 13 }}>
+                      {place.name}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 11 }}>
+                      {technicalPlaceTypes[place.type]}
+                    </Text>
+                  </div>
                 </Card>
                 {place.isVerified && (
                   <CheckCircleOutlined 
@@ -513,9 +503,6 @@ const ReviewInventorySheetModal = ({ open, sheet, onClose, onApprove, onReturn }
                 </Col>
                 <Col>
                   <Space>
-                    {selectedPlace.isInspected && (
-                      <Tag color="blue">Осмотрено</Tag>
-                    )}
                     {selectedPlace.isVerified && (
                       <Tag color="green">Проверено</Tag>
                     )}
