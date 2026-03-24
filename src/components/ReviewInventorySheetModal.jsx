@@ -173,9 +173,9 @@ const ReviewInventorySheetModal = ({ open, sheet, onClose, onApprove, onReturn }
 
   if (!sheet) return null;
 
-  const inspectedCount = sheet.inspectedPlacesCount || 0;
+  const verifiedCount = technicalPlaces.filter(p => p.isVerified).length;
   const totalCount = sheet.technicalPlacesCount || 0;
-  const progressPercent = totalCount > 0 ? Math.round((inspectedCount / totalCount) * 100) : 0;
+  const progressPercent = totalCount > 0 ? Math.round((verifiedCount / totalCount) * 100) : 0;
 
   const getPlaceStatusIcon = (place) => {
     return <ClockCircleOutlined style={{ color: '#bfbfbf', fontSize: 16 }} />;
@@ -380,7 +380,7 @@ const ReviewInventorySheetModal = ({ open, sheet, onClose, onApprove, onReturn }
           <Col flex="auto">
             <Progress 
               percent={progressPercent} 
-              format={() => `${inspectedCount} / ${totalCount}`}
+              format={() => `${verifiedCount} / ${totalCount}`}
               size="small"
               style={{ marginBottom: 0 }}
             />

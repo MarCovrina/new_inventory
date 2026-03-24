@@ -87,15 +87,7 @@ const InventoryRegistry = () => {
         <Tag color={statusColors[status]}>{status}</Tag>
       ),
     },
-    {
-      title: 'Тех. места',
-      key: 'technicalPlaces',
-      render: (_, record) => (
-        <Text>
-          {record.inspectedPlacesCount} / {record.technicalPlacesCount}
-        </Text>
-      ),
-    },
+    
     {
       title: 'Дата создания',
       dataIndex: 'createdAt',
