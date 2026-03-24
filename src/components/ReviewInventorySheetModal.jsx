@@ -366,9 +366,9 @@ const ReviewInventorySheetModal = ({ open, sheet, onClose, onApprove, onReturn }
               <Text type="secondary">
                 <UserOutlined /> Исполнитель: <Text strong>{sheet.executor?.name || '-'}</Text>
               </Text>
-              <Text type="secondary">
+              {/* <Text type="secondary">
                 <CalendarOutlined /> Сдан: <Text strong>{sheet.submittedAt || '-'}</Text>
-              </Text>
+              </Text> */}
             </Space>
           </Col>
         </Row>

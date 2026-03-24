@@ -141,9 +141,9 @@ const CoordinatePickerModal = ({ open, value, onSave, onCancel }) => {
 };
 
 const TechnicalPlaceCard = ({ place, onClick, isSelected, disabled, onDelete, onRestore, canModify }) => {
-  const statusIcon = place.isInspected 
-    ? <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 18 }} /> 
-    : <ClockCircleOutlined style={{ color: '#bfbfbf', fontSize: 18 }} />;
+  // const statusIcon = place.isInspected 
+  //   ? <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 18 }} /> 
+  //   : <ClockCircleOutlined style={{ color: '#bfbfbf', fontSize: 18 }} />;
 
   const borderLeftColor = place.isInspected ? '#52c41a' : '#bfbfbf';
 
@@ -185,9 +185,9 @@ const TechnicalPlaceCard = ({ place, onClick, isSelected, disabled, onDelete, on
             {place.isDeleted && <Tag color="error">Удалено</Tag>}
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 100, justifyContent: 'flex-end' }}>
+        {/* <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 100, justifyContent: 'flex-end' }}>
           {statusIcon}
-        </div>
+        </div> */}
       </div>
       {place.comment && (
         <div style={{ marginTop: 8 }}>
