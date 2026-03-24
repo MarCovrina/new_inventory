@@ -101,6 +101,20 @@ const ReviewInventorySheetModal = ({ open, sheet, onClose, onApprove, onReturn }
     setIsEditing(false);
   };
 
+  const handleToggleVerified = () => {
+    if (selectedPlace) {
+      const updatedPlace = {
+        ...selectedPlace,
+        isVerified: !selectedPlace.isVerified
+      };
+      setSelectedPlace(updatedPlace);
+      setTechnicalPlaces(prev => prev.map(p => 
+        p.id === updatedPlace.id ? updatedPlace : p
+      ));
+      message.success(updatedPlace.isVerified ? 'Техническое место проверено' : 'Отметка о проверке снята');
+    }
+  };
+
   const handleCharacteristicChange = (key, value) => {
     setEditedCharacteristics(prev => ({
       ...prev,
@@ -397,22 +411,31 @@ const ReviewInventorySheetModal = ({ open, sheet, onClose, onApprove, onReturn }
           ) : (
             <Space direction="vertical" style={{ width: '100%' }} size="small">
               {technicalPlaces.map(place => (
+                <div style={{ 
+                  position: 'relative',
+                  cursor: 'pointer',
+                  borderLeft: `3px solid ${getPlaceStatusColor(place)}`,
+                  background: selectedPlace?.id === place.id ? '#e6f7ff' : '#fff',
+                  borderRadius: 8,
+                  transition: 'all 0.2s'
+                }}
+                onClick={() => {
+                  if (isEditing) {
+                    handleSave();
+                  }
+                  setSelectedPlace(place);
+                }}
+              >
                 <Card
                   key={place.id}
                   size="small"
                   hoverable
-                  onClick={() => {
-                    if (isEditing) {
-                      handleSave();
-                    }
-                    setSelectedPlace(place);
-                  }}
                   style={{ 
                     cursor: 'pointer',
-                    borderLeft: `3px solid ${getPlaceStatusColor(place)}`,
-                    background: selectedPlace?.id === place.id ? '#e6f7ff' : '#fff'
+                    background: 'transparent',
+                    border: 'none'
                   }}
-                  bodyStyle={{ padding: 12 }}
+                  bodyStyle={{ padding: 12, paddingRight: place.isVerified ? 36 : 12 }}
                 >
                   <Space>
                     {getPlaceStatusIcon(place)}
@@ -426,6 +449,19 @@ const ReviewInventorySheetModal = ({ open, sheet, onClose, onApprove, onReturn }
                     </div>
                   </Space>
                 </Card>
+                {place.isVerified && (
+                  <CheckCircleOutlined 
+                    style={{ 
+                      position: 'absolute', 
+                      right: 12, 
+                      top: '50%', 
+                      transform: 'translateY(-50%)',
+                      color: '#52c41a',
+                      fontSize: 18
+                    }} 
+                  />
+                )}
+              </div>
               ))}
             </Space>
           )}
@@ -449,9 +485,19 @@ const ReviewInventorySheetModal = ({ open, sheet, onClose, onApprove, onReturn }
                     </Button>
                   </Space>
                 ) : (
-                  <Button icon={<EditOutlined />} onClick={handleEditStart}>
-                    Редактировать
-                  </Button>
+                  <Space>
+                    <Button icon={<EditOutlined />} onClick={handleEditStart}>
+                      Редактировать
+                    </Button>
+                    <Button 
+                      type={selectedPlace?.isVerified ? 'primary' : 'default'}
+                      icon={<CheckCircleOutlined />}
+                      onClick={handleToggleVerified}
+                      style={selectedPlace?.isVerified ? { background: '#52c41a', borderColor: '#52c41a' } : {}}
+                    >
+                      Проверено
+                    </Button>
+                  </Space>
                 )
               }
             >
