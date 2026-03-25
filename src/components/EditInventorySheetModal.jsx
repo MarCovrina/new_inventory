@@ -205,9 +205,7 @@ const TechnicalPlaceCard = ({ place, onClick, isSelected, disabled, onDelete, on
               icon={<DeleteOutlined />}
               onClick={handleActionClick}
               size="large"
-            >
-              Удалить
-            </Button>
+            />
           )}
           {place.isDeleted && (
             <Button
@@ -216,9 +214,7 @@ const TechnicalPlaceCard = ({ place, onClick, isSelected, disabled, onDelete, on
               onClick={handleActionClick}
               size="large"
               style={{ background: '#52c41a', borderColor: '#52c41a' }}
-            >
-              Восстановить
-            </Button>
+            />
           )}
         </div>
       )}
