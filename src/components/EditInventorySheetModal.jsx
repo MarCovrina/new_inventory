@@ -1308,7 +1308,8 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
         open={open}
         onCancel={onClose}
         width="95%"
-        style={{ maxWidth: 600, top: 0 }}
+        centered={false}
+        style={{ maxWidth: 600, top: 0, margin: '0 auto', paddingBottom: 0 }}
         styles={{ body: { padding: 0, height: 'calc(100vh - 2px)' }, mask: { backdropFilter: 'blur(2px)' } }}
         closable={true}
         footer={selectedPlace ? null : [

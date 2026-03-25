@@ -27,6 +27,8 @@ export const technicalPlaceCharacteristics = {
   ],
   [technicalPlaceTypes.SPAN]: [
     { key: 'spanNumber', label: 'Номер пролёта', type: 'string' },
+    { key: 'startPoint', label: 'Точка начала', type: 'string' },
+    { key: 'endPoint', label: 'Точка окончания', type: 'string' },
     { key: 'length', label: 'Длина пролёта, м', type: 'number' },
     { key: 'wireType', label: 'Тип провода', type: 'string' },
     { key: 'wireCrossSection', label: 'Сечение провода, мм²', type: 'number' },
