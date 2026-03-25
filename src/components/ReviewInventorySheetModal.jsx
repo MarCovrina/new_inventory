@@ -374,16 +374,16 @@ const ReviewInventorySheetModal = ({ open, sheet, onClose, onApprove, onReturn }
         </Row>
         
         <Row align="middle" gutter={16}>
-          <Col flex="none">
-            <Text strong>Проверено:</Text>
-          </Col>
-          <Col flex="auto">
-            <Progress 
-              percent={progressPercent} 
-              format={() => `${verifiedCount} / ${totalCount}`}
-              size="small"
-              style={{ marginBottom: 0 }}
-            />
+          <Col>
+            <Space>
+              <Text strong>Проверено:</Text>
+              <Progress 
+                percent={progressPercent} 
+                format={() => `${verifiedCount} / ${totalCount}`}
+                size="small"
+                style={{ marginBottom: 0, minWidth: 150 }}
+              />
+            </Space>
           </Col>
         </Row>
       </div>

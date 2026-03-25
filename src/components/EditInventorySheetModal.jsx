@@ -1167,14 +1167,15 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
           role="progressbar" 
           aria-valuenow={technicalPlaces.filter(p => p.isInspected).length}
           aria-valuemax={technicalPlaces.length}
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}
         >
           <Progress 
             showInfo={false} 
             size="small"
             percent={technicalPlaces.length > 0 ? Math.round((technicalPlaces.filter(p => p.isInspected).length / technicalPlaces.length) * 100) : 0}
+            style={{ flex: 1 }}
           />
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text type="secondary" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
             Осмотрено: {technicalPlaces.filter(p => p.isInspected).length} / {technicalPlaces.length}
           </Text>
         </div>
@@ -1307,7 +1308,8 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
         open={open}
         onCancel={onClose}
         width="95%"
-        style={{ maxWidth: 600 }}
+        style={{ maxWidth: 600, top: 0 }}
+        styles={{ body: { padding: 0, height: 'calc(100vh - 2px)' }, mask: { backdropFilter: 'blur(2px)' } }}
         closable={true}
         footer={selectedPlace ? null : [
           sheet.status === inventorySheetStatuses.DRAFT && (
