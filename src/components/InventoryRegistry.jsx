@@ -9,9 +9,11 @@ import {
   Tag, 
   Typography, 
   Card,
+  Divider,
+  Checkbox,
   message 
 } from 'antd';
-import { PlusOutlined, EyeOutlined, EditOutlined, CarryOutOutlined } from '@ant-design/icons';
+import { PlusOutlined, EyeOutlined, EditOutlined, CarryOutOutlined, DeleteOutlined } from '@ant-design/icons';
 import { inventorySheets, inventoryObjects, users, inventorySheetStatuses } from '../data/mockData';
 import EditInventorySheetModal from './EditInventorySheetModal';
 import ReviewInventorySheetModal from './ReviewInventorySheetModal';
@@ -33,6 +35,9 @@ const InventoryRegistry = () => {
   const [selectedSheet, setSelectedSheet] = useState(null);
   const [form] = Form.useForm();
   const [sheets, setSheets] = useState(inventorySheets);
+  const [jointObjects, setJointObjects] = useState([]);
+  const [isObjectSelectModalOpen, setIsObjectSelectModalOpen] = useState(false);
+  const [selectedObjectIds, setSelectedObjectIds] = useState([]);
 
   const handleCreateSheet = (values) => {
     const newSheet = {
@@ -161,6 +166,7 @@ const InventoryRegistry = () => {
         onCancel={() => {
           setIsModalOpen(false);
           form.resetFields();
+          setJointObjects([]);
         }}
         footer={null}
         width={600}
@@ -192,6 +198,42 @@ const InventoryRegistry = () => {
             </Select>
           </Form.Item>
 
+          <div style={{ marginBottom: 16 }}>
+            <Text strong style={{ display: 'block', marginBottom: 12 }}>Объекты для совместного подвеса</Text>
+            {jointObjects.length > 0 && (
+              <div style={{ marginBottom: 12 }}>
+                {jointObjects.map(obj => (
+                  <Card size="small" key={obj.id} style={{ marginBottom: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Space direction="vertical" size={0}>
+                        <Text>{obj.name}</Text>
+                        <Text type="secondary" style={{ fontSize: 12 }}>{obj.type} • {obj.address}</Text>
+                      </Space>
+                      <Button 
+                        type="text" 
+                        danger 
+                        icon={<DeleteOutlined />} 
+                        onClick={() => setJointObjects(prev => prev.filter(j => j.id !== obj.id))}
+                      />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+            <Button 
+
+              icon={<PlusOutlined />} 
+              onClick={() => {
+                setSelectedObjectIds([]);
+                setIsObjectSelectModalOpen(true);
+              }}
+              block
+              size="large"
+            >
+              Добавить
+            </Button>
+          </div>
+
           <Form.Item
             label="Исполнитель"
             name="executorId"
@@ -218,6 +260,7 @@ const InventoryRegistry = () => {
               <Button onClick={() => {
                 setIsModalOpen(false);
                 form.resetFields();
+                setJointObjects([]);
               }}>
                 Отмена
               </Button>
@@ -227,6 +270,53 @@ const InventoryRegistry = () => {
             </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title="Выбор объектов для совместного подвеса"
+        open={isObjectSelectModalOpen}
+        onCancel={() => setIsObjectSelectModalOpen(false)}
+        onOk={() => {
+          const selectedObjs = inventoryObjects.filter(obj => selectedObjectIds.includes(obj.id));
+          // Add new objects, avoid duplicates
+          setJointObjects(prev => {
+            const existingIds = prev.map(p => p.id);
+            const newObjs = selectedObjs.filter(obj => !existingIds.includes(obj.id));
+            return [...prev, ...newObjs];
+          });
+          setIsObjectSelectModalOpen(false);
+        }}
+        okText="Добавить"
+        width={500}
+      >
+        <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+          {inventoryObjects.map(obj => (
+            <div 
+              key={obj.id} 
+              style={{ 
+                padding: '12px 8px', 
+                borderBottom: '1px solid #f0f0f0',
+                cursor: 'pointer',
+                background: selectedObjectIds.includes(obj.id) ? '#e6f7ff' : 'transparent'
+              }}
+              onClick={() => {
+                setSelectedObjectIds(prev => 
+                  prev.includes(obj.id) 
+                    ? prev.filter(id => id !== obj.id)
+                    : [...prev, obj.id]
+                );
+              }}
+            >
+              <Space>
+                <Checkbox checked={selectedObjectIds.includes(obj.id)} />
+                <Space direction="vertical" size={0}>
+                  <Text>{obj.name}</Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>{obj.type} • {obj.address}</Text>
+                </Space>
+              </Space>
+            </div>
+          ))}
+        </div>
       </Modal>
 
       <EditInventorySheetModal
