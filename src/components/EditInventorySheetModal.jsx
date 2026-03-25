@@ -1177,6 +1177,19 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
         </div>
 
         {/* Search by dispatch name */}
+        <Button 
+          type="dashed" 
+          icon={<PlusOutlined />} 
+          onClick={handleAddPlace}
+          size="large"
+          block
+          disabled={sheet.status === inventorySheetStatuses.DRAFT}
+          style={{ marginBottom: 16, height: 48 }}
+        >
+          Добавить тех. место
+        </Button>
+
+        {/* Search by dispatch name */}
         <Input
           placeholder="Поиск по диспетчерскому наименованию..."
           prefix={<SearchOutlined />}
@@ -1282,18 +1295,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
           />
         </div>
 
-        <Button 
-          type="dashed" 
-          icon={<PlusOutlined />} 
-          onClick={handleAddPlace}
-          size="large"
-          block
-          disabled={sheet.status === inventorySheetStatuses.DRAFT}
-          style={{ marginTop: 16, height: 48 }}
-        >
-          Добавить тех. место
-        </Button>
-      </div>
+        </div>
     );
   };
 
@@ -1306,7 +1308,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
         width="95%"
         centered={false}
         style={{ maxWidth: 600, top: 0, margin: '0 auto', paddingBottom: 0 }}
-        styles={{ body: { padding: 0, height: 'calc(100vh - 2px)' }, mask: { backdropFilter: 'blur(2px)' } }}
+        styles={{ body: { padding: 0 }, mask: { backdropFilter: 'blur(2px)' } }}
         closable={true}
         footer={selectedPlace ? null : [
           sheet.status === inventorySheetStatuses.DRAFT && (
