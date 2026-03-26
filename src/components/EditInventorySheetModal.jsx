@@ -1087,7 +1087,8 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
     const updatedSheet = {
       ...sheet,
       status: inventorySheetStatuses.SUBMITTED,
-      submittedAt: new Date().toISOString().split('T')[0]
+      submittedAt: new Date().toISOString().split('T')[0],
+      technicalPlaces: technicalPlaces
     };
     onSave(updatedSheet);
     onClose();
@@ -1097,7 +1098,8 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
   const handleAcceptWork = () => {
     const updatedSheet = {
       ...sheet,
-      status: inventorySheetStatuses.IN_WORK
+      status: inventorySheetStatuses.IN_WORK,
+      technicalPlaces: technicalPlaces
     };
     onSave(updatedSheet);
     message.success('Лист инвентаризации принят в работу.');

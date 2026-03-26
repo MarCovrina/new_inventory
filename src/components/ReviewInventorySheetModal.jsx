@@ -54,10 +54,11 @@ const ReviewInventorySheetModal = ({ open, sheet, onClose, onApprove, onReturn }
 
   useEffect(() => {
     if (open && sheet) {
-      const places = getTechnicalPlacesByObjectId(sheet.object?.id);
-      setTechnicalPlaces(places || []);
+      // Use technicalPlaces from sheet if available (edited data), otherwise load from mockData
+      const places = sheet.technicalPlaces || getTechnicalPlacesByObjectId(sheet.object?.id) || [];
+      setTechnicalPlaces(places);
       
-      if (places && places.length > 0) {
+      if (places.length > 0) {
         setSelectedPlace(places[0]);
       } else {
         setSelectedPlace(null);
