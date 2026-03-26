@@ -222,11 +222,17 @@ const TechnicalPlaceCard = ({ place, onClick, isSelected, disabled, onDelete, on
   );
 };
 
-const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
+const TechnicalPlaceForm = ({ place, onSave, onClose, sheet }) => {
   const [form] = Form.useForm();
   const [characteristics, setCharacteristics] = useState(place.characteristics || {});
   const [photos, setPhotos] = useState(place.photos || []);
   const [isInspected, setIsInspected] = useState(place.isInspected || false);
+  
+  // Point selection modal state
+  const [pointSelectModalOpen, setPointSelectModalOpen] = useState(false);
+  const [selectingPointKey, setSelectingPointKey] = useState(null); // 'startPoint' or 'endPoint'
+  const [pointFilter, setPointFilter] = useState('main'); // 'main' or 'joint'
+  const [pointSearchQuery, setPointSearchQuery] = useState('');
   
   const charDefinitions = technicalPlaceCharacteristics[place.type] || [];
 
@@ -478,6 +484,35 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
       rules: char.type === 'number' ? [{ type: 'number', message: 'Введите число' }] : [],
       style: { marginBottom: 16 }
     };
+
+    // Special handling for startPoint and endPoint in Пролёт type
+    if (char.key === 'startPoint' || char.key === 'endPoint') {
+      const currentValue = characteristics[char.key] || '';
+      return (
+        <Col xs={24} sm={12} key={char.key}>
+          <Form.Item label={char.label} style={{ marginBottom: 16 }}>
+            <Button 
+              type="default" 
+              onClick={() => {
+                setSelectingPointKey(char.key);
+                setPointFilter('main');
+                setPointSearchQuery('');
+                setPointSelectModalOpen(true);
+              }}
+              style={{ 
+                width: '100%', 
+                height: 40,
+                justifyContent: 'flex-start',
+                textAlign: 'left'
+              }}
+              size="large"
+            >
+              {currentValue || 'Выберите...'}
+            </Button>
+          </Form.Item>
+        </Col>
+      );
+    }
 
     switch (char.type) {
       case 'string':
@@ -979,6 +1014,107 @@ const TechnicalPlaceForm = ({ place, onSave, onClose }) => {
           </Button>
         )}
       </div>
+
+      {/* Point Selection Modal for Пролёт characteristics */}
+      <Modal
+        title={selectingPointKey === 'startPoint' ? 'Выбор точки начала' : 'Выбор точки окончания'}
+        open={pointSelectModalOpen}
+        onCancel={() => setPointSelectModalOpen(false)}
+        footer={null}
+        width={500}
+      >
+        <div style={{ padding: '8px 0' }}>
+          {/* Filter Buttons */}
+          <Space style={{ marginBottom: 16 }}>
+            <Button 
+              type={pointFilter === 'main' ? 'primary' : 'default'}
+              onClick={() => setPointFilter('main')}
+            >
+              Объект инвентаризации
+            </Button>
+            <Button 
+              type={pointFilter === 'joint' ? 'primary' : 'default'}
+              onClick={() => setPointFilter('joint')}
+            >
+              Объекты для совместного подвеса
+            </Button>
+          </Space>
+
+          {/* Search Input */}
+          <Input 
+            placeholder="Поиск опоры..." 
+            value={pointSearchQuery}
+            onChange={e => setPointSearchQuery(e.target.value)}
+            style={{ marginBottom: 16 }}
+            allowClear
+          />
+
+          {/* Support List */}
+          <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+            {(() => {
+              // Get supports based on filter
+              let supports = [];
+              
+              if (pointFilter === 'main') {
+                // Main inventory object
+                supports = getTechnicalPlacesByObjectId(sheet?.object?.id)
+                  ?.filter(p => p.type === 'Опора')
+                  ?.filter(p => 
+                    !pointSearchQuery || 
+                    p.name?.toLowerCase().includes(pointSearchQuery.toLowerCase()) ||
+                    p.dispatchName?.toLowerCase().includes(pointSearchQuery.toLowerCase())
+                  ) || [];
+              } else {
+                // Joint objects - need to get from sheet.jointObjects if available
+                const jointObjIds = sheet?.jointObjects?.map(j => j.id) || [];
+                supports = [];
+                jointObjIds.forEach(jointObjId => {
+                  const jointSupports = getTechnicalPlacesByObjectId(jointObjId)
+                    ?.filter(p => p.type === 'Опора')
+                    ?.filter(p => 
+                      !pointSearchQuery || 
+                      p.name?.toLowerCase().includes(pointSearchQuery.toLowerCase()) ||
+                      p.dispatchName?.toLowerCase().includes(pointSearchQuery.toLowerCase())
+                    ) || [];
+                  supports = [...supports, ...jointSupports];
+                });
+              }
+
+              if (supports.length === 0) {
+                return <Text type="secondary">Опоры не найдены</Text>;
+              }
+
+              return supports.map(support => (
+                <div 
+                  key={support.id} 
+                  style={{ 
+                    padding: '12px 8px', 
+                    borderBottom: '1px solid #f0f0f0',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => {
+                    // Update the characteristics with the selected support
+                    const newCharacteristics = { 
+                      ...characteristics, 
+                      [selectingPointKey]: support.name || support.dispatchName || support.id 
+                    };
+                    setCharacteristics(newCharacteristics);
+                    form.setFieldsValue(newCharacteristics);
+                    setPointSelectModalOpen(false);
+                  }}
+                >
+                  <Space direction="vertical" size={0}>
+                    <Text>{support.name}</Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {support.dispatchName}
+                    </Text>
+                  </Space>
+                </div>
+              ));
+            })()}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
@@ -1112,6 +1248,7 @@ const EditInventorySheetModal = ({ open, sheet, onClose, onSave }) => {
       return (
         <TechnicalPlaceForm 
           place={selectedPlace} 
+          sheet={sheet}
           onSave={handlePlaceSave}
           onClose={handleBackToList}
         />
