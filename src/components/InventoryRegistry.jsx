@@ -44,6 +44,7 @@ const InventoryRegistry = () => {
       id: sheets.length + 1,
       number: `ИЛ-2026-${String(sheets.length + 1).padStart(3, '0')}`,
       object: inventoryObjects.find(obj => obj.id === values.objectId),
+      jointObjects: jointObjects,
       executor: users.find(user => user.id === values.executorId),
       master: users[0], // First user is master
       status: inventorySheetStatuses.DRAFT,
@@ -56,6 +57,7 @@ const InventoryRegistry = () => {
     
     setSheets([newSheet, ...sheets]);
     setIsModalOpen(false);
+    setJointObjects([]);
     form.resetFields();
     message.success('Лист инвентаризации успешно создан');
   };

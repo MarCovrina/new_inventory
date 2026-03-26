@@ -1025,19 +1025,26 @@ const TechnicalPlaceForm = ({ place, onSave, onClose, sheet }) => {
       >
         <div style={{ padding: '8px 0' }}>
           {/* Filter Buttons */}
-          <Space style={{ marginBottom: 16 }}>
+          <Space style={{ marginBottom: 16 }} wrap>
             <Button 
               type={pointFilter === 'main' ? 'primary' : 'default'}
               onClick={() => setPointFilter('main')}
+              style={{ maxWidth: 200 }}
             >
-              Объект инвентаризации
+              {sheet?.object?.name || 'Объект инвентаризации'}
             </Button>
-            <Button 
-              type={pointFilter === 'joint' ? 'primary' : 'default'}
-              onClick={() => setPointFilter('joint')}
-            >
-              Объекты для совместного подвеса
-            </Button>
+            {sheet?.jointObjects?.map((jointObj, index) => (
+              <Button 
+                key={jointObj.id}
+                type={pointFilter === `joint_${jointObj.id}` ? 'primary' : 'default'}
+                onClick={() => {
+                  setPointFilter(`joint_${jointObj.id}`);
+                }}
+                style={{ maxWidth: 200 }}
+              >
+                {jointObj.name}
+              </Button>
+            ))}
           </Space>
 
           {/* Search Input */}
@@ -1064,20 +1071,16 @@ const TechnicalPlaceForm = ({ place, onSave, onClose, sheet }) => {
                     p.name?.toLowerCase().includes(pointSearchQuery.toLowerCase()) ||
                     p.dispatchName?.toLowerCase().includes(pointSearchQuery.toLowerCase())
                   ) || [];
-              } else {
-                // Joint objects - need to get from sheet.jointObjects if available
-                const jointObjIds = sheet?.jointObjects?.map(j => j.id) || [];
-                supports = [];
-                jointObjIds.forEach(jointObjId => {
-                  const jointSupports = getTechnicalPlacesByObjectId(jointObjId)
-                    ?.filter(p => p.type === 'Опора')
-                    ?.filter(p => 
-                      !pointSearchQuery || 
-                      p.name?.toLowerCase().includes(pointSearchQuery.toLowerCase()) ||
-                      p.dispatchName?.toLowerCase().includes(pointSearchQuery.toLowerCase())
-                    ) || [];
-                  supports = [...supports, ...jointSupports];
-                });
+              } else if (pointFilter.startsWith('joint_')) {
+                // Specific joint object
+                const jointObjId = pointFilter.replace('joint_', '');
+                supports = getTechnicalPlacesByObjectId(jointObjId)
+                  ?.filter(p => p.type === 'Опора')
+                  ?.filter(p => 
+                    !pointSearchQuery || 
+                    p.name?.toLowerCase().includes(pointSearchQuery.toLowerCase()) ||
+                    p.dispatchName?.toLowerCase().includes(pointSearchQuery.toLowerCase())
+                  ) || [];
               }
 
               if (supports.length === 0) {
