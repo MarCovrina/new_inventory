@@ -51,6 +51,7 @@ const ReviewInventorySheetModal = ({ open, sheet, onClose, onApprove, onReturn }
   const [addItemModalOpen, setAddItemModalOpen] = useState(false);
   const [addSetModalOpen, setAddSetModalOpen] = useState(false);
   const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1, unit: 'шт' });
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (open && sheet) {
@@ -400,61 +401,98 @@ const ReviewInventorySheetModal = ({ open, sheet, onClose, onApprove, onReturn }
           background: '#fafafa'
         }}>
           <Title level={5} style={{ marginBottom: 16 }}>Технические места</Title>
+          <Input 
+            placeholder="Поиск..." 
+            value={searchQuery} 
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{ marginBottom: 16 }}
+            allowClear
+          />
           {technicalPlaces.length === 0 ? (
             <Empty description="Нет технических мест" />
           ) : (
-            <Space direction="vertical" style={{ width: '100%' }} size="small">
-              {technicalPlaces.map(place => (
-                <div style={{ 
-                  position: 'relative',
-                  cursor: 'pointer',
-                  borderLeft: `3px solid ${getPlaceStatusColor(place)}`,
-                  background: selectedPlace?.id === place.id ? '#e6f7ff' : '#fff',
-                  borderRadius: 8,
-                  transition: 'all 0.2s'
-                }}
-                onClick={() => {
-                  if (isEditing) {
-                    handleSave();
-                  }
-                  setSelectedPlace(place);
-                }}
-              >
-                <Card
-                  key={place.id}
-                  size="small"
-                  hoverable
-                  style={{ 
+            <>
+              {(() => {
+                const filteredPlaces = technicalPlaces.filter(place => 
+                  place.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  place.dispatchName?.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+                const inspectedPlaces = filteredPlaces.filter(place => place.isInspected);
+                const notInspectedPlaces = filteredPlaces.filter(place => !place.isInspected);
+
+                const renderPlaceCard = (place) => (
+                  <div style={{ 
+                    position: 'relative',
                     cursor: 'pointer',
-                    background: 'transparent',
-                    border: 'none'
+                    borderLeft: `3px solid ${getPlaceStatusColor(place)}`,
+                    background: selectedPlace?.id === place.id ? '#e6f7ff' : '#fff',
+                    borderRadius: 8,
+                    transition: 'all 0.2s'
                   }}
-                  bodyStyle={{ padding: 12, paddingRight: place.isVerified ? 36 : 12 }}
+                  onClick={() => {
+                    if (isEditing) {
+                      handleSave();
+                    }
+                    setSelectedPlace(place);
+                  }}
                 >
-                  <div>
-                    <Text strong style={{ display: 'block', fontSize: 13 }}>
-                      {place.name}
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: 11 }}>
-                      {technicalPlaceTypes[place.type]}
-                    </Text>
-                  </div>
-                </Card>
-                {place.isVerified && (
-                  <CheckCircleOutlined 
+                  <Card
+                    key={place.id}
+                    size="small"
+                    hoverable
                     style={{ 
-                      position: 'absolute', 
-                      right: 12, 
-                      top: '50%', 
-                      transform: 'translateY(-50%)',
-                      color: '#52c41a',
-                      fontSize: 18
-                    }} 
-                  />
-                )}
-              </div>
-              ))}
-            </Space>
+                      cursor: 'pointer',
+                      background: 'transparent',
+                      border: 'none'
+                    }}
+                    bodyStyle={{ padding: 12, paddingRight: place.isVerified ? 36 : 12 }}
+                  >
+                    <div>
+                      <Text strong style={{ display: 'block', fontSize: 13 }}>
+                        {place.name}
+                      </Text>
+                      <Text type="secondary" style={{ fontSize: 11 }}>
+                        {technicalPlaceTypes[place.type]}
+                      </Text>
+                    </div>
+                  </Card>
+                  {place.isVerified && (
+                    <CheckCircleOutlined 
+                      style={{ 
+                        position: 'absolute', 
+                        right: 12, 
+                        top: '50%', 
+                        transform: 'translateY(-50%)',
+                        color: '#52c41a',
+                        fontSize: 18
+                      }} 
+                    />
+                  )}
+                </div>
+                );
+
+                return (
+                  <Space direction="vertical" style={{ width: '100%' }} size="small">
+                    {inspectedPlaces.length > 0 && (
+                      <>
+                        <Text style={{ color: '#52c41a', fontSize: 12, textTransform: 'uppercase', fontWeight: 600 }}>
+                          Осмотрено ({inspectedPlaces.length})
+                        </Text>
+                        {inspectedPlaces.map(renderPlaceCard)}
+                      </>
+                    )}
+                    {notInspectedPlaces.length > 0 && (
+                      <>
+                        <Text style={{ color: '#8c8c8c', fontSize: 12, textTransform: 'uppercase', fontWeight: 600, marginTop: inspectedPlaces.length > 0 ? 8 : 0 }}>
+                          Не осмотрено ({notInspectedPlaces.length})
+                        </Text>
+                        {notInspectedPlaces.map(renderPlaceCard)}
+                      </>
+                    )}
+                  </Space>
+                );
+              })()}
+            </>
           )}
         </div>
 
